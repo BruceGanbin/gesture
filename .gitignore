@@ -1,0 +1,14 @@
+build
+obj
+*.bak
+*.o
+*.orig
+*.rej
+*.dep
+.projectile
+.DS_Store
+cscope.files
+cscope.out
+JLinkLog.txt
+project.uvgui.Administrator
+project.uvgui.Administrator.bak
