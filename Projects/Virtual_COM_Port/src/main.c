@@ -31,6 +31,7 @@
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
+#include "hw_timer.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,6 +40,12 @@
 /* Extern variables ----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
+extern uint8_t usb_flg;
+
+st_timer usb_timer;
+void usb_send_handle(void *parameter) {
+    send_to_usb("hello world\r\n",15);
+}
 
 /*******************************************************************************
 * Function Name  : main.
@@ -50,12 +57,17 @@
 int main(void)
 {
   Set_System();
+  sf_timer_init();
   Set_USBClock();
   USB_Interrupts_Config();
   USB_Init();
-  
+
+  usb_timer.func = usb_send_handle;
+  usb_timer.timeout_tick = 1000;
+  cre_sf_timer(&usb_timer,0);
   while (1)
   {
+      sf_timer_proc();
   }
 }
 #ifdef USE_FULL_ASSERT

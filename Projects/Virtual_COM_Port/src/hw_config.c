@@ -37,16 +37,23 @@
 
 
 /* Private typedef -----------------------------------------------------------*/
+typedef struct {
+    uint8_t buff[USB_TX_SIZE];
+    uint8_t prt_in;
+    uint8_t prt_out;
+}USB_tx_type;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 ErrorStatus HSEStartUpStatus;
 USART_InitTypeDef USART_InitStructure;
 EXTI_InitTypeDef EXTI_InitStructure;
-uint8_t  USART_Rx_Buffer [USART_RX_DATA_SIZE]; 
+uint8_t  USART_Rx_Buffer [USART_RX_DATA_SIZE];
 uint32_t USART_Rx_ptr_in = 0;
 uint32_t USART_Rx_ptr_out = 0;
 uint32_t USART_Rx_length  = 0;
+
+USB_tx_type USB_Send = {{0},0,0};
 
 uint8_t  USB_Tx_State = 0;
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -478,6 +485,64 @@ void Handle_USBAsynchXfer (void)
     SetEPTxValid(ENDP1); 
   }  
   
+}
+
+void send_to_usb(uint8_t * data ,uint32_t length) {
+    uint32_t len_deta;
+    len_deta = USB_TX_SIZE - USB_Send.prt_in;
+    if(len_deta >= length) {
+        memcpy(&USB_Send.buf[USB_Send.prt_in],data,length);
+        USB_Send.prt_in += length;
+    } else {
+        memcpy(&USB_Send.buf[USB_Send.prt_in],data,(USB_TX_SIZE - USB_Send.prt_in));
+        memcpy(&USB_Send.buf[0],data+len_deta,(length - len_deta));
+        USB_Send.prt_in = len_deta;
+    }
+}
+
+uint8_t usb_flg = 0;
+void Handle_USBAsynchXfer2(void) {
+    uint16_t len;
+    uint16_t tx_prt;
+    
+    if(USB_Tx_State != 1) {
+
+//	  if(usb_flg == 0) {
+//	      USB_Tx_State = 0;
+//	      return;
+//	  }
+
+        if(USB_Send.prt_in >= USB_TX_SIZE) {
+            USB_Send.prt_in = 0;
+        }
+        if(USB_Send.prt_in == USB_Send.prt_out) {
+            return;
+        }
+
+        if(USB_Send.prt_in < USB_Send.prt_out) {
+            len = USB_TX_SIZE - USB_Send.prt_out;
+        } else {
+            len = USB_Send.prt_in - USB_Send.prt_out;
+        }
+
+        if(len > VIRTUAL_COM_PORT_DATA_SIZE) {
+            tx_prt = USB_Send.prt_out;
+            len = VIRTUAL_COM_PORT_INT_SIZE;
+            USB_Send.prt_out += VIRTUAL_COM_PORT_INT_SIZE;
+        } else {
+            tx_prt = USB_Send.prt_out;
+            len = USB_Send.prt_in - USB_Send.prt_out;
+            USB_Send.prt_out += len;
+        }
+
+        usb_flg = 0;
+        USB_Tx_State = 1; 
+        UserToPMABufferCopy(USB_Send.buff[tx_prt], ENDP1_TXADDR, len);
+        SetEPTxCount(ENDP1,15);
+        SetEPTxValid(ENDP1);
+
+        //        USB_Send.prt_out = USB_Send.prt_in;
+    }
 }
 /*******************************************************************************
 * Function Name  : UART_To_USB_Send_Data.

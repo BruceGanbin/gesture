@@ -136,7 +136,7 @@ void SOF_Callback(void)
       FrameCount = 0;
       
       /* Check the data to be sent through IN pipe */
-      Handle_USBAsynchXfer();
+      Handle_USBAsynchXfer2();
     }
   }  
 }

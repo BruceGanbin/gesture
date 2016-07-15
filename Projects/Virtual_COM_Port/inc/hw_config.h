@@ -44,6 +44,7 @@
 #define LED_OFF               0xFF
 
 #define USART_RX_DATA_SIZE   2048
+#define USB_TX_SIZE          1024
 /* Exported functions ------------------------------------------------------- */
 void Set_System(void);
 void Set_USBClock(void);
