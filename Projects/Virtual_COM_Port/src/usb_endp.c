@@ -47,7 +47,7 @@ extern  uint8_t USART_Rx_Buffer[];
 extern uint32_t USART_Rx_ptr_out;
 extern uint32_t USART_Rx_length;
 extern uint8_t  USB_Tx_State;
-
+extern USB_tx_type USB_Send;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -62,34 +62,63 @@ void EP1_IN_Callback (void)
 {
   uint16_t USB_Tx_ptr;
   uint16_t USB_Tx_length;
-  
+  uint16_t len;
+  uint16_t tx_prt;
   if (USB_Tx_State == 1)
   {
-    if (USART_Rx_length == 0) 
-    {
-      USB_Tx_State = 0;
-    }
-    else 
-    {
-      if (USART_Rx_length > VIRTUAL_COM_PORT_DATA_SIZE){
-        USB_Tx_ptr = USART_Rx_ptr_out;
-        USB_Tx_length = VIRTUAL_COM_PORT_DATA_SIZE;
+//    if (USART_Rx_length == 0)
+//    {
+//      USB_Tx_State = 0;
+//    }
+//    else
+//    {
+//      if (USART_Rx_length > VIRTUAL_COM_PORT_DATA_SIZE){
+//        USB_Tx_ptr = USART_Rx_ptr_out;
+//        USB_Tx_length = VIRTUAL_COM_PORT_DATA_SIZE;
+//
+//        USART_Rx_ptr_out += VIRTUAL_COM_PORT_DATA_SIZE;
+//        USART_Rx_length -= VIRTUAL_COM_PORT_DATA_SIZE;
+//      }
+//      else
+//      {
+//        USB_Tx_ptr = USART_Rx_ptr_out;
+//        USB_Tx_length = USART_Rx_length;
+//
+//        USART_Rx_ptr_out += USART_Rx_length;
+//        USART_Rx_length = 0;
+//      }
+//      UserToPMABufferCopy(&USART_Rx_Buffer[USB_Tx_ptr], ENDP1_TXADDR, USB_Tx_length);
+//      SetEPTxCount(ENDP1, USB_Tx_length);
+//      SetEPTxValid(ENDP1);
+//    }
+
+     if(USB_Send.prt_in == USB_Send.prt_out) {
+            USB_Tx_State = 0;
+     } else {
+        if(USB_Send.prt_in < USB_Send.prt_out) {
+            len = USB_TX_SIZE - USB_Send.prt_out;
+        } else {
+            len = USB_Send.prt_in - USB_Send.prt_out;
+        }
         
-        USART_Rx_ptr_out += VIRTUAL_COM_PORT_DATA_SIZE;
-        USART_Rx_length -= VIRTUAL_COM_PORT_DATA_SIZE;    
-      }
-      else 
-      {
-        USB_Tx_ptr = USART_Rx_ptr_out;
-        USB_Tx_length = USART_Rx_length;
-        
-        USART_Rx_ptr_out += USART_Rx_length;
-        USART_Rx_length = 0;
-      }
-      UserToPMABufferCopy(&USART_Rx_Buffer[USB_Tx_ptr], ENDP1_TXADDR, USB_Tx_length);
-      SetEPTxCount(ENDP1, USB_Tx_length);
-      SetEPTxValid(ENDP1); 
-    }
+        if(len > VIRTUAL_COM_PORT_DATA_SIZE) {
+            tx_prt = USB_Send.prt_out;
+            len = VIRTUAL_COM_PORT_INT_SIZE;
+            USB_Send.prt_out += VIRTUAL_COM_PORT_INT_SIZE;
+        } else {
+            tx_prt = USB_Send.prt_out;
+            USB_Send.prt_out += len;
+        }
+
+        if(USB_Send.prt_out >= USB_TX_SIZE) {
+            USB_Send.prt_out = 0;
+        }
+
+        USB_Tx_State = 1;
+        UserToPMABufferCopy(&USB_Send.buff[tx_prt], ENDP1_TXADDR, len);
+        SetEPTxCount(ENDP1,len);
+        SetEPTxValid(ENDP1);
+     }
   }
 }
 
@@ -110,7 +139,7 @@ void EP3_OUT_Callback(void)
   /* USB data will be immediately processed, this allow next USB traffic being 
   NAKed till the end of the USART Xfer */
   
-  USB_To_USART_Send_Data(USB_Rx_Buffer, USB_Rx_Cnt);
+  //  USB_To_USART_Send_Data(USB_Rx_Buffer, USB_Rx_Cnt);
  
   /* Enable the receive of data on EP3 */
   SetEPRxValid(ENDP3);

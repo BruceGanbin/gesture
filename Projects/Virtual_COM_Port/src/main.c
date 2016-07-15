@@ -32,7 +32,8 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "hw_timer.h"
-
+#include <string.h>
+#include <stdio.h>
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -44,7 +45,11 @@ extern uint8_t usb_flg;
 
 st_timer usb_timer;
 void usb_send_handle(void *parameter) {
-    send_to_usb("hello world\r\n",15);
+    uint8_t car[30] = {0};
+    static uint32_t i = 0;
+    memset(car,0,sizeof(car));
+    sprintf(car,"%dhello world\r\n",i++);
+send_to_usb(car,strlen(car));
 }
 
 /*******************************************************************************
@@ -63,7 +68,7 @@ int main(void)
   USB_Init();
 
   usb_timer.func = usb_send_handle;
-  usb_timer.timeout_tick = 1000;
+  usb_timer.timeout_tick = 500;
   cre_sf_timer(&usb_timer,0);
   while (1)
   {

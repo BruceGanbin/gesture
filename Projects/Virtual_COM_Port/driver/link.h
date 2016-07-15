@@ -1,7 +1,9 @@
 #ifndef __DOUBLE_LINK_H
 #define __DOUBLE_LINK_H
 
-#define NULL                         0
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
 
 typedef struct NODE
 {

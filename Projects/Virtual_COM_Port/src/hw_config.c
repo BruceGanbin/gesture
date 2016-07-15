@@ -34,14 +34,10 @@
 #include "usb_desc.h"
 #include "hw_config.h"
 #include "usb_pwr.h"
-
+#include "string.h"
 
 /* Private typedef -----------------------------------------------------------*/
-typedef struct {
-    uint8_t buff[USB_TX_SIZE];
-    uint8_t prt_in;
-    uint8_t prt_out;
-}USB_tx_type;
+
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -301,30 +297,30 @@ void USB_Cable_Config (FunctionalState NewState)
 * Input          :  None.
 * Return         :  None.
 *******************************************************************************/
-void USART_Config_Default(void)
-{
-  /* EVAL_COM1 default configuration */
-  /* EVAL_COM1 configured as follow:
-        - BaudRate = 9600 baud  
-        - Word Length = 8 Bits
-        - One Stop Bit
-        - Parity Odd
-        - Hardware flow control disabled
-        - Receive and transmit enabled
-  */
-  USART_InitStructure.USART_BaudRate = 9600;
-  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-  USART_InitStructure.USART_StopBits = USART_StopBits_1;
-  USART_InitStructure.USART_Parity = USART_Parity_Odd;
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-  /* Configure and enable the USART */
-  STM_EVAL_COMInit(COM1, &USART_InitStructure);
-
-  /* Enable the USART Receive interrupt */
-  USART_ITConfig(EVAL_COM1, USART_IT_RXNE, ENABLE);
-}
+//void USART_Config_Default(void)
+//{
+//  /* EVAL_COM1 default configuration */
+//  /* EVAL_COM1 configured as follow:
+//        - BaudRate = 9600 baud  
+//        - Word Length = 8 Bits
+//        - One Stop Bit
+//        - Parity Odd
+//        - Hardware flow control disabled
+//        - Receive and transmit enabled
+//  */
+//  USART_InitStructure.USART_BaudRate = 9600;
+//  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+//  USART_InitStructure.USART_StopBits = USART_StopBits_1;
+//  USART_InitStructure.USART_Parity = USART_Parity_Odd;
+//  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+//  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+// 
+//  /* Configure and enable the USART */
+//  STM_EVAL_COMInit(COM1, &USART_InitStructure);
+// 
+//  /* Enable the USART Receive interrupt */
+//  USART_ITConfig(EVAL_COM1, USART_IT_RXNE, ENABLE);
+//}
 
 /*******************************************************************************
 * Function Name  :  USART_Config.
@@ -334,81 +330,81 @@ void USART_Config_Default(void)
                     TRUE : configuration done with success
                     FALSE : configuration aborted.
 *******************************************************************************/
-bool USART_Config(void)
-{
-
-  /* set the Stop bit*/
-  switch (linecoding.format)
-  {
-    case 0:
-      USART_InitStructure.USART_StopBits = USART_StopBits_1;
-      break;
-    case 1:
-      USART_InitStructure.USART_StopBits = USART_StopBits_1_5;
-      break;
-    case 2:
-      USART_InitStructure.USART_StopBits = USART_StopBits_2;
-      break;
-    default :
-    {
-      USART_Config_Default();
-      return (FALSE);
-    }
-  }
-
-  /* set the parity bit*/
-  switch (linecoding.paritytype)
-  {
-    case 0:
-      USART_InitStructure.USART_Parity = USART_Parity_No;
-      break;
-    case 1:
-      USART_InitStructure.USART_Parity = USART_Parity_Even;
-      break;
-    case 2:
-      USART_InitStructure.USART_Parity = USART_Parity_Odd;
-      break;
-    default :
-    {
-      USART_Config_Default();
-      return (FALSE);
-    }
-  }
-
-  /*set the data type : only 8bits and 9bits is supported */
-  switch (linecoding.datatype)
-  {
-    case 0x07:
-      /* With this configuration a parity (Even or Odd) should be set */
-      USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-      break;
-    case 0x08:
-      if (USART_InitStructure.USART_Parity == USART_Parity_No)
-      {
-        USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-      }
-      else 
-      {
-        USART_InitStructure.USART_WordLength = USART_WordLength_9b;
-      }
-      
-      break;
-    default :
-    {
-      USART_Config_Default();
-      return (FALSE);
-    }
-  }
-
-  USART_InitStructure.USART_BaudRate = linecoding.bitrate;
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
- 
-  /* Configure and enable the USART */
-  STM_EVAL_COMInit(COM1, &USART_InitStructure);
-
-  return (TRUE);
-}
+//bool USART_Config(void)
+//{
+// 
+//  /* set the Stop bit*/
+//  switch (linecoding.format)
+//  {
+//    case 0:
+//      USART_InitStructure.USART_StopBits = USART_StopBits_1;
+//      break;
+//    case 1:
+//      USART_InitStructure.USART_StopBits = USART_StopBits_1_5;
+//      break;
+//    case 2:
+//      USART_InitStructure.USART_StopBits = USART_StopBits_2;
+//      break;
+//    default :
+//    {
+//      USART_Config_Default();
+//      return (FALSE);
+//    }
+//  }
+// 
+//  /* set the parity bit*/
+//  switch (linecoding.paritytype)
+//  {
+//    case 0:
+//      USART_InitStructure.USART_Parity = USART_Parity_No;
+//      break;
+//    case 1:
+//      USART_InitStructure.USART_Parity = USART_Parity_Even;
+//      break;
+//    case 2:
+//      USART_InitStructure.USART_Parity = USART_Parity_Odd;
+//      break;
+//    default :
+//    {
+//      USART_Config_Default();
+//      return (FALSE);
+//    }
+//  }
+// 
+//  /*set the data type : only 8bits and 9bits is supported */
+//  switch (linecoding.datatype)
+//  {
+//    case 0x07:
+//      /* With this configuration a parity (Even or Odd) should be set */
+//      USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+//      break;
+//    case 0x08:
+//      if (USART_InitStructure.USART_Parity == USART_Parity_No)
+//      {
+//        USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+//      }
+//      else 
+//      {
+//        USART_InitStructure.USART_WordLength = USART_WordLength_9b;
+//      }
+//      
+//      break;
+//    default :
+//    {
+//      USART_Config_Default();
+//      return (FALSE);
+//    }
+//  }
+// 
+//  USART_InitStructure.USART_BaudRate = linecoding.bitrate;
+//  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+//  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+// 
+//  /* Configure and enable the USART */
+//  STM_EVAL_COMInit(COM1, &USART_InitStructure);
+// 
+//  return (TRUE);
+//}
 
 /*******************************************************************************
 * Function Name  : USB_To_USART_Send_Data.
@@ -491,31 +487,26 @@ void send_to_usb(uint8_t * data ,uint32_t length) {
     uint32_t len_deta;
     len_deta = USB_TX_SIZE - USB_Send.prt_in;
     if(len_deta >= length) {
-        memcpy(&USB_Send.buf[USB_Send.prt_in],data,length);
+        memcpy(&USB_Send.buff[USB_Send.prt_in],data,length);
         USB_Send.prt_in += length;
     } else {
-        memcpy(&USB_Send.buf[USB_Send.prt_in],data,(USB_TX_SIZE - USB_Send.prt_in));
-        memcpy(&USB_Send.buf[0],data+len_deta,(length - len_deta));
-        USB_Send.prt_in = len_deta;
+        memcpy(&USB_Send.buff[USB_Send.prt_in],data,(USB_TX_SIZE - USB_Send.prt_in));
+        memcpy(&USB_Send.buff[0],data+len_deta,(length - len_deta));
+        USB_Send.prt_in = length - len_deta;
+    }
+    if(USB_Send.prt_in >= USB_TX_SIZE) {
+        USB_Send.prt_in = 0;
     }
 }
 
-uint8_t usb_flg = 0;
 void Handle_USBAsynchXfer2(void) {
     uint16_t len;
     uint16_t tx_prt;
     
     if(USB_Tx_State != 1) {
 
-//	  if(usb_flg == 0) {
-//	      USB_Tx_State = 0;
-//	      return;
-//	  }
-
-        if(USB_Send.prt_in >= USB_TX_SIZE) {
-            USB_Send.prt_in = 0;
-        }
         if(USB_Send.prt_in == USB_Send.prt_out) {
+            USB_Tx_State = 0;
             return;
         }
 
@@ -531,17 +522,17 @@ void Handle_USBAsynchXfer2(void) {
             USB_Send.prt_out += VIRTUAL_COM_PORT_INT_SIZE;
         } else {
             tx_prt = USB_Send.prt_out;
-            len = USB_Send.prt_in - USB_Send.prt_out;
             USB_Send.prt_out += len;
         }
 
-        usb_flg = 0;
-        USB_Tx_State = 1; 
-        UserToPMABufferCopy(USB_Send.buff[tx_prt], ENDP1_TXADDR, len);
-        SetEPTxCount(ENDP1,15);
-        SetEPTxValid(ENDP1);
+        if(USB_Send.prt_out >= USB_TX_SIZE) {
+            USB_Send.prt_out = 0;
+        }
 
-        //        USB_Send.prt_out = USB_Send.prt_in;
+        USB_Tx_State = 1; 
+        UserToPMABufferCopy(&USB_Send.buff[tx_prt], ENDP1_TXADDR, len);
+        SetEPTxCount(ENDP1,len);
+        SetEPTxValid(ENDP1);
     }
 }
 /*******************************************************************************

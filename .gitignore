@@ -1,5 +1,6 @@
 build
 STM3210B-EVAL/
+STM3210E-EVAL/
 obj
 *.bak
 *.o

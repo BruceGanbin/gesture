@@ -34,7 +34,7 @@
 #include "platform_config.h"
 #include "usb_type.h"
 
-/* Exported types ------------------------------------------------------------*/
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported define -----------------------------------------------------------*/
@@ -45,6 +45,12 @@
 
 #define USART_RX_DATA_SIZE   2048
 #define USB_TX_SIZE          1024
+/* Exported types ------------------------------------------------------------*/
+typedef struct {
+    uint8_t buff[USB_TX_SIZE];
+    uint32_t prt_in;
+    uint32_t prt_out;
+}USB_tx_type;
 /* Exported functions ------------------------------------------------------- */
 void Set_System(void);
 void Set_USBClock(void);
