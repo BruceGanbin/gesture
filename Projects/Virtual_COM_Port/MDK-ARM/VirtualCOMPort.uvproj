@@ -465,6 +465,11 @@
               <FileType>1</FileType>
               <FilePath>..\driver\link.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\i2c.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1327,6 +1332,11 @@
               <FileName>link.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\link.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\i2c.c</FilePath>
             </File>
           </Files>
         </Group>

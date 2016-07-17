@@ -34,6 +34,7 @@
 #include "hw_timer.h"
 #include <string.h>
 #include <stdio.h>
+#include "i2c.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -45,11 +46,17 @@ extern uint8_t usb_flg;
 
 st_timer usb_timer;
 void usb_send_handle(void *parameter) {
-    uint8_t car[30] = {0};
+    uint8_t car[200];
     static uint32_t i = 0;
+    static uint32_t j = 0;
+    uint8_t iic_buf[20];
+    memset(iic_buf,0,18);
     memset(car,0,sizeof(car));
-    sprintf(car,"%dhello world\r\n",i++);
-send_to_usb(car,strlen(car));
+
+    IIC_Read(iic_buf,0xD0,0x75,1);
+
+    sprintf(car,"0X%X  == %d\r\n",iic_buf[0],j--);
+    send_to_usb(car,strlen(car));
 }
 
 /*******************************************************************************
@@ -63,12 +70,13 @@ int main(void)
 {
   Set_System();
   sf_timer_init();
+  I2C_init();
   Set_USBClock();
   USB_Interrupts_Config();
   USB_Init();
 
   usb_timer.func = usb_send_handle;
-  usb_timer.timeout_tick = 500;
+  usb_timer.timeout_tick = 1000;
   cre_sf_timer(&usb_timer,0);
   while (1)
   {
