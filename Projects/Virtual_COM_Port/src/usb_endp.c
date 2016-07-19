@@ -103,8 +103,8 @@ void EP1_IN_Callback (void)
         
         if(len > VIRTUAL_COM_PORT_DATA_SIZE) {
             tx_prt = USB_Send.prt_out;
-            len = VIRTUAL_COM_PORT_INT_SIZE;
-            USB_Send.prt_out += VIRTUAL_COM_PORT_INT_SIZE;
+            len = VIRTUAL_COM_PORT_DATA_SIZE;
+            USB_Send.prt_out += VIRTUAL_COM_PORT_DATA_SIZE;
         } else {
             tx_prt = USB_Send.prt_out;
             USB_Send.prt_out += len;

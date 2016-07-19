@@ -518,8 +518,8 @@ void Handle_USBAsynchXfer2(void) {
 
         if(len > VIRTUAL_COM_PORT_DATA_SIZE) {
             tx_prt = USB_Send.prt_out;
-            len = VIRTUAL_COM_PORT_INT_SIZE;
-            USB_Send.prt_out += VIRTUAL_COM_PORT_INT_SIZE;
+            len = VIRTUAL_COM_PORT_DATA_SIZE;
+            USB_Send.prt_out += VIRTUAL_COM_PORT_DATA_SIZE;
         } else {
             tx_prt = USB_Send.prt_out;
             USB_Send.prt_out += len;
@@ -613,5 +613,6 @@ static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len)
     pbuf[ 2* idx + 1] = 0;
   }
 }
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
