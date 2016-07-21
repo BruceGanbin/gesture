@@ -109,7 +109,8 @@ int _MLPrintLog (int priority, const char* tag, const char* fmt, ...)
 
 void eMPL_send_quat(long *quat)
 {
-    char out[PACKET_LENGTH];
+    //    char out[PACKET_LENGTH];
+    char out[23];
     int i;
     if (!quat)
         return;
@@ -135,15 +136,13 @@ void eMPL_send_quat(long *quat)
     out[21] = '\r';
     out[22] = '\n';
     
-//    for (i=0; i<PACKET_LENGTH; i++) {
-//      fputc(out[i]);
-//    }
-    send_to_usb(out,PACKET_LENGTH);
+    send_to_usb(out,23);
 }
 
 void eMPL_send_data(unsigned char type, long *data)
 {
-    char out[PACKET_LENGTH];
+    //    char out[PACKET_LENGTH];
+    char out[23];
     int i;
     if (!data)
         return;
@@ -209,10 +208,8 @@ void eMPL_send_data(unsigned char type, long *data)
     default:
         return;
     }
-//    for (i=0; i<PACKET_LENGTH; i++) {
-//      fputc(out[i]);
-//    }
-    send_to_usb(out,PACKET_LENGTH);
+
+    send_to_usb(out,23);
 }
 
 /**

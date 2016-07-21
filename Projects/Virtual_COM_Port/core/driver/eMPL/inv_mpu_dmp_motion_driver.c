@@ -41,6 +41,19 @@
 #define i2c_read    Sensors_I2C_ReadRegister
 #define get_ms      get_tick_count
 
+#elif defined  (STM32F10X_HD) || (defined STM32F10X_MD) || (defined STM32F10X_LD)
+#include "i2c.h"
+//#include "main.h"
+#include "log.h"
+#include "hw_timer.h"
+
+#define i2c_write   IIC_Write
+#define i2c_read    IIC_Read
+#define delay_ms    st_hw_msdelay
+#define get_ms      get_timer
+#define log_i       MPL_LOGI
+#define log_e       MPL_LOGE
+
 #elif defined MOTION_DRIVER_TARGET_MSP430
 #include "msp430.h"
 #include "msp430_clock.h"
@@ -635,7 +648,8 @@ int dmp_set_accel_bias(long *bias)
 
     mpu_get_accel_sens(&accel_sens);
     accel_sf = (long long)accel_sens << 15;
-    __no_operation();
+    //    __no_operation();
+    __nop();
 
     accel_bias_body[0] = bias[dmp.orient & 3];
     if (dmp.orient & 4)
@@ -1339,7 +1353,8 @@ int dmp_read_fifo(short *gyro, short *accel, long *quat,
     if (dmp.feature_mask & (DMP_FEATURE_TAP | DMP_FEATURE_ANDROID_ORIENT))
         decode_gesture(fifo_data + ii);
 
-    get_ms(timestamp);
+    //    get_ms(timestamp);
+    *timestamp = get_ms();
     return 0;
 }
 

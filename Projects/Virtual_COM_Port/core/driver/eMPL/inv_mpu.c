@@ -36,8 +36,8 @@
  * fabsf(float x)
  * min(int a, int b)
  */
-#if defined EMPL_TARGET_STM32F4
-#include "i2c.h"   
+#if defined (EMPL_TARGET_STM32F4)
+#include "i2c.h"
 #include "main.h"
 #include "log.h"
 #include "board-st_discovery.h"
@@ -49,7 +49,21 @@
 #define log_i       MPL_LOGI
 #define log_e       MPL_LOGE
 #define min(a,b) ((a<b)?a:b)
-   
+
+#elif defined  (STM32F10X_HD) || (defined STM32F10X_MD) || (defined STM32F10X_LD)
+#include "i2c.h"
+//#include "main.h"
+#include "log.h"
+#include "hw_timer.h"
+
+#define i2c_write   IIC_Write
+#define i2c_read    IIC_Read
+#define delay_ms    st_hw_msdelay
+#define get_ms      get_timer
+#define log_i       MPL_LOGI
+#define log_e       MPL_LOGE
+#define min(a,b) ((a<b)?a:b)
+
 #elif defined MOTION_DRIVER_TARGET_MSP430
 #include "msp430.h"
 #include "msp430_i2c.h"
@@ -771,7 +785,7 @@ int mpu_init(struct int_param_s *int_param)
     if (mpu_configure_fifo(0))
         return -1;
 
-#ifndef EMPL_TARGET_STM32F4    
+#if !defined EMPL_TARGET_STM32F4 && !defined STM32F10X_HD && !defined STM32F10X_MD && !defined STM32F10X_LD
     if (int_param)
         reg_int_cb(int_param);
 #endif
@@ -902,7 +916,7 @@ int mpu_get_gyro_reg(short *data, unsigned long *timestamp)
     data[1] = (tmp[2] << 8) | tmp[3];
     data[2] = (tmp[4] << 8) | tmp[5];
     if (timestamp)
-        get_ms(timestamp);
+        *timestamp = get_ms();
     return 0;
 }
 
@@ -925,7 +939,7 @@ int mpu_get_accel_reg(short *data, unsigned long *timestamp)
     data[1] = (tmp[2] << 8) | tmp[3];
     data[2] = (tmp[4] << 8) | tmp[5];
     if (timestamp)
-        get_ms(timestamp);
+        *timestamp = get_ms();
     return 0;
 }
 
@@ -947,7 +961,7 @@ int mpu_get_temperature(long *data, unsigned long *timestamp)
         return -1;
     raw = (tmp[0] << 8) | tmp[1];
     if (timestamp)
-        get_ms(timestamp);
+        *timestamp = get_ms();
 
     data[0] = (long)((35 + ((raw - (float)st.hw->temp_offset) / st.hw->temp_sens)) * 65536L);
     return 0;
@@ -1768,7 +1782,7 @@ int mpu_read_fifo(short *gyro, short *accel, unsigned long *timestamp,
             return -2;
         }
     }
-    get_ms((unsigned long*)timestamp);
+    *timestamp = get_ms();
 
     if (i2c_read(st.hw->addr, st.reg->fifo_r_w, packet_size, data))
         return -1;
@@ -3078,7 +3092,7 @@ int mpu_get_compass_reg(short *data, unsigned long *timestamp)
     data[2] = ((long)data[2] * st.chip_cfg.mag_sens_adj[2]) >> 8;
 
     if (timestamp)
-        get_ms(timestamp);
+        *timestamp = get_ms();
     return 0;
 #else
     return -1;

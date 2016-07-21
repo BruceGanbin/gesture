@@ -103,7 +103,7 @@ static void I2C_Dma_Config(IIC_RT_Typedef Dir,uint8_t *pbuffer,uint16_t NumData)
 
 }
 
-unsigned char IIC_Write(uint8_t *pBuffer, uint8_t PartAddr, uint8_t WriteAddr, uint16_t NumByteToWrite)
+unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWrite,uint8_t *pBuffer)
 {
     /*send Start condition,test on EV5 and clear it*/
     TimeOut=I2C_TimeOut;
@@ -187,7 +187,7 @@ unsigned char IIC_Write(uint8_t *pBuffer, uint8_t PartAddr, uint8_t WriteAddr, u
     return  I2C_NOTimeout;
 }
 
-unsigned char IIC_Read(uint8_t *pBuffer, uint8_t PartAddr, uint8_t WriteAddr, uint16_t NumByteToRead)
+unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead,uint8_t *pBuffer)
 {
     I2C_AcknowledgeConfig(I2C1, ENABLE);
     /*send Start condition,test on EV5 and clear it*/

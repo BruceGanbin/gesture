@@ -20,7 +20,7 @@
 
 #define I2C_TimeOut                   500
 
-#define I2C_WTimeOut                  0x0F
+#define I2C_WTimeOut                  0x08
 #define I2C_RTimeOut                  0x0F
 #define I2C_NOTimeout                 0x00
 
@@ -41,9 +41,10 @@ typedef enum
 }IIC_RT_Typedef;
 
 void I2C_init(void);
-unsigned char IIC_Write(uint8_t *pBuffer,uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead);
-unsigned char IIC_Read(uint8_t *pBuffer,uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead);
-unsigned char IIC_CPT112S_Read(uint8_t *pBuffer,uint8_t PartAddr,uint16_t NumByteToRead);
+//unsigned char IIC_Write(uint8_t *pBuffer,uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead);
+//unsigned char IIC_Read(uint8_t *pBuffer,uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead);
+unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead,uint8_t *pBuffer);
+unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWrite,uint8_t *pBuffer);
 unsigned char CheckIIC_Ack(uint8_t WriteAddr);
 void IIC_Reset_Bus(void);
 

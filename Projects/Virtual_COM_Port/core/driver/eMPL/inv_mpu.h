@@ -38,7 +38,7 @@ struct int_param_s {
     unsigned long pin;
     void (*cb)(volatile void*);
     void *arg;
-#elif defined EMPL_TARGET_STM32F4
+#elif defined EMPL_TARGET_STM32F4 || defined STM32F10X_HD || defined STM32F10X_MD || defined STM32F10X_LD
     void (*cb)(void);
 #endif
 };
