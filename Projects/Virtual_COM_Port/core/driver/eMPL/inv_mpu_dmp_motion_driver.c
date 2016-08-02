@@ -44,15 +44,17 @@
 #elif defined  (STM32F10X_HD) || (defined STM32F10X_MD) || (defined STM32F10X_LD)
 #include "i2c.h"
 //#include "main.h"
-#include "log.h"
+#include "log2.h"
 #include "hw_timer.h"
 
 #define i2c_write   IIC_Write
 #define i2c_read    IIC_Read
 #define delay_ms    st_hw_msdelay
 #define get_ms      get_timer
-#define log_i       MPL_LOGI
-#define log_e       MPL_LOGE
+//#define log_i       MPL_LOGI
+//#define log_e       MPL_LOGE
+#define log_i       log_printf
+#define log_e       log_printf
 
 #elif defined MOTION_DRIVER_TARGET_MSP430
 #include "msp430.h"
@@ -259,6 +261,7 @@
 #define D_TILT0_L               (50)
 #define D_TILT1_H               (52)
 #define D_TILT1_L               (54)
+
 #define D_TILT2_H               (56)
 #define D_TILT2_L               (58)
 #define D_TILT3_H               (60)

@@ -53,15 +53,17 @@
 #elif defined  (STM32F10X_HD) || (defined STM32F10X_MD) || (defined STM32F10X_LD)
 #include "i2c.h"
 //#include "main.h"
-#include "log.h"
+#include "log2.h"
 #include "hw_timer.h"
 
 #define i2c_write   IIC_Write
 #define i2c_read    IIC_Read
 #define delay_ms    st_hw_msdelay
 #define get_ms      get_timer
-#define log_i       MPL_LOGI
-#define log_e       MPL_LOGE
+//#define log_i       MPL_LOGI
+//#define log_e       MPL_LOGE
+#define log_i       log_printf
+#define log_e       log_printf
 #define min(a,b) ((a<b)?a:b)
 
 #elif defined MOTION_DRIVER_TARGET_MSP430
@@ -515,7 +517,8 @@ const struct gyro_reg_s reg = {
 #endif
 };
 const struct hw_s hw = {
-    .addr           = 0x68,
+    //    .addr           = 0x68,
+    .addr           = 0xD0,
     .max_fifo       = 1024,
     .num_reg        = 118,
     .temp_sens      = 340,
@@ -595,7 +598,8 @@ const struct gyro_reg_s reg = {
 #endif
 };
 const struct hw_s hw = {
-    .addr           = 0x68,
+    //    .addr           = 0x68,
+    .addr           = 0xD0,
     .max_fifo       = 1024,
     .num_reg        = 128,
     .temp_sens      = 321,
@@ -728,6 +732,7 @@ int mpu_read_reg(unsigned char reg, unsigned char *data)
 int mpu_init(struct int_param_s *int_param)
 {
     unsigned char data[6];
+    int ret;
 
     /* Reset device. */
     data[0] = BIT_RESET;
@@ -791,7 +796,12 @@ int mpu_init(struct int_param_s *int_param)
 #endif
 
 #ifdef AK89xx_SECONDARY
-    setup_compass();
+    //    if(setup_compass())
+    ret = setup_compass();
+    if(ret) {
+        log_printf("com%d\r\n",ret);
+        return -1;
+    }
     if (mpu_set_compass_sample_rate(10))
         return -1;
 #else
@@ -1439,7 +1449,7 @@ int mpu_set_sample_rate(unsigned short rate)
         data = 1000 / rate - 1;
         if (i2c_write(st.hw->addr, st.reg->rate_div, 1, &data))
             return -1;
-
+        delay_ms(1);
         st.chip_cfg.sample_rate = 1000 / (1 + data);
 
 #ifdef AK89xx_SECONDARY
@@ -1779,7 +1789,7 @@ int mpu_read_fifo(short *gyro, short *accel, unsigned long *timestamp,
             return -1;
         if (data[0] & BIT_FIFO_OVERFLOW) {
             mpu_reset_fifo();
-            return -2;
+            return -1;
         }
     }
     *timestamp = get_ms();
@@ -1845,7 +1855,7 @@ int mpu_read_fifo_stream(unsigned short length, unsigned char *data,
             return -1;
         if (tmp[0] & BIT_FIFO_OVERFLOW) {
             mpu_reset_fifo();
-            return -2;
+            return -1;
         }
     }
 
@@ -2492,6 +2502,7 @@ static int get_st_6500_biases(long *gyro, long *accel, unsigned char hw_test, in
     	delay_ms(test.sample_wait_ms); //wait 10ms to fill FIFO
 		if (i2c_read(st.hw->addr, st.reg->fifo_count_h, 2, data))
 			return -1;
+                delay_ms(1);
 		fifo_count = (data[0] << 8) | data[1];
 		packet_count = fifo_count / MAX_PACKET_LENGTH;
 		if ((test.packet_thresh - s) < packet_count)
@@ -2809,6 +2820,7 @@ int mpu_write_mem(unsigned short mem_addr, unsigned short length,
 
     if (i2c_write(st.hw->addr, st.reg->bank_sel, 2, tmp))
         return -1;
+    delay_ms(1);
     if (i2c_write(st.hw->addr, st.reg->mem_r_w, length, data))
         return -1;
     return 0;
@@ -2877,7 +2889,7 @@ int mpu_load_firmware(unsigned short length, const unsigned char *firmware,
         if (mpu_read_mem(ii, this_write, cur))
             return -1;
         if (memcmp(firmware+ii, cur, this_write))
-            return -2;
+            return -1;
     }
 
     /* Set program start address. */
@@ -2945,19 +2957,20 @@ int mpu_get_dmp_state(unsigned char *enabled)
 /* This initialization is similar to the one in ak8975.c. */
 static int setup_compass(void)
 {
-    unsigned char data[4], akm_addr;
+    unsigned char data[4], akm_addr,m_addr;
 
     mpu_set_bypass(1);
-
     /* Find compass. Possible addresses range from 0x0C to 0x0F. */
-    for (akm_addr = 0x0C; akm_addr <= 0x0F; akm_addr++) {
+    //    for (akm_addr = 0x0C; akm_addr <= 0x0F; akm_addr++) {
+    for (m_addr = 0x0C; m_addr <= 0x0F; m_addr++) {
         int result;
+        akm_addr = (m_addr<<1);
         result = i2c_read(akm_addr, AKM_REG_WHOAMI, 1, data);
         if (!result && (data[0] == AKM_WHOAMI))
             break;
     }
 
-    if (akm_addr > 0x0F) {
+    if (m_addr > 0x0F) {
         /* TODO: Handle this case in all compass-related functions. */
         log_e("Compass not found.\n");
         return -1;
@@ -3073,15 +3086,15 @@ int mpu_get_compass_reg(short *data, unsigned long *timestamp)
 #if defined AK8975_SECONDARY
     /* AK8975 doesn't have the overrun error bit. */
     if (!(tmp[0] & AKM_DATA_READY))
-        return -2;
+        return -1;
     if ((tmp[7] & AKM_OVERFLOW) || (tmp[7] & AKM_DATA_ERROR))
-        return -3;
+        return -1;
 #elif defined AK8963_SECONDARY
     /* AK8963 doesn't have the data read error bit. */
     if (!(tmp[0] & AKM_DATA_READY) || (tmp[0] & AKM_DATA_OVERRUN))
-        return -2;
+        return -1;
     if (tmp[7] & AKM_OVERFLOW)
-        return -3;
+        return -1;
 #endif
     data[0] = (tmp[2] << 8) | tmp[1];
     data[1] = (tmp[4] << 8) | tmp[3];

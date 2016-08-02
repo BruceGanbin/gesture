@@ -470,6 +470,21 @@
               <FileType>1</FileType>
               <FilePath>..\driver\i2c.c</FilePath>
             </File>
+            <File>
+              <FileName>mpu92xx_60xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\mpu92xx_60xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\stm32_serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\log.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1352,6 +1367,21 @@
               <FileName>i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu92xx_60xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\mpu92xx_60xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\stm32_serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\log.c</FilePath>
             </File>
           </Files>
         </Group>

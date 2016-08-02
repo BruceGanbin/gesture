@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include "i2c.h"
 #include "log.h"
+#include "mpu92xx_60xx.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -47,18 +48,24 @@ extern uint8_t usb_flg;
 
 st_timer usb_timer;
 void usb_send_handle(void *parameter) {
-    uint8_t car[200];
+    //    uint8_t car[200];
     static uint32_t i = 0;
     static uint32_t j = 0;
-    uint8_t iic_buf[20];
-    memset(iic_buf,0,18);
-    memset(car,0,sizeof(car));
-
-    IIC_Read(0xD0,0x75,1,iic_buf);
+    //    uint8_t iic_buf[20];
+    short accel_data[3];
+    short gyro_data[3];
+//    memset(iic_buf,0,18);
+//    memset(car,0,sizeof(car));
+//    IIC_Read(0xD0,0x75,1,iic_buf);
+//    log_printf("%d:0x%X\r\n",i++,iic_buf[0]);
 // 
-    MPL_LOGI("%d+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++======================================================************",i++);
+    //    MPL_LOGI("%d+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++======================================================************",i++);
 
-    MPL_LOGI("0x%X",iic_buf[0]);
+    //    run_self_test();
+    mpu_get_gyro_reg(gyro_data,&i);
+    mpu_get_accel_reg(accel_data,&i);
+    log_printf("accel %d,%d,%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
+    log_printf("gyro %d,%d,%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
 }
 
 /*******************************************************************************
@@ -72,11 +79,15 @@ int main(void)
 {
   Set_System();
   sf_timer_init();
-  I2C_init();
-  Set_USBClock();
-  USB_Interrupts_Config();
-  USB_Init();
+//  Set_USBClock();
+//  USB_Interrupts_Config();
+//  USB_Init();
+  serial_init();
+  log_printf("hello world\r\n");
+  //  st_hw_msdelay(2000);
 
+  inv_mpu_init();
+  
   usb_timer.func = usb_send_handle;
   usb_timer.timeout_tick = 1000;
   cre_sf_timer(&usb_timer,0);

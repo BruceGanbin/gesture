@@ -103,7 +103,7 @@
   #define USB_DISCONNECT                      GPIOB  
   #define USB_DISCONNECT_PIN                  GPIO_Pin_14
   #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOB
-  #define EVAL_COM1_IRQHandler                USART1_IRQHandler 
+//  #define EVAL_COM1_IRQHandler                USART1_IRQHandler
  
 
 #elif defined (USE_STM32L152_EVAL) || defined (USE_STM32L152D_EVAL)
