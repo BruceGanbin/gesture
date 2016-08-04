@@ -7,6 +7,7 @@
 #include "invensense_adv.h"
 #include "i2c.h"
 #include "log.h"
+#include "stm32f10x.h"
 
 void run_self_test(void);
 
@@ -54,6 +55,35 @@ static struct platform_data_s compass_pdata = {
 
 struct int_param_s int_param;
 
+void set_exit_int(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource5);
+    /* Configure EXTI4 line */
+
+    EXTI_InitStructure.EXTI_Line = EXTI_Line5;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
+
 int inv_mpu_init(void) {
     inv_error_t result;
     unsigned char accel_fsr;
@@ -63,6 +93,7 @@ int inv_mpu_init(void) {
 #endif
 
     I2C_init();
+    set_exit_int();
     st_hw_msdelay(20);
     result = mpu_init(&int_param);
     if (result) {
@@ -158,7 +189,7 @@ int inv_mpu_init(void) {
     //    dmp_set_fifo_rate(DEFAULT_MPU_HZ);
     //    dmp_set_fifo_rate(20);
 
-    run_self_test();
+    //    run_self_test();
     mpu_set_dmp_state(1);
     
     return 0;
@@ -237,4 +268,28 @@ void run_self_test(void)
                 log_printf("Compass failed.\n");
      }
 
+}
+
+static uint8_t int_flag = 0;
+void get_senser(void) {
+    short accel_data[3];
+    short gyro_data[3];
+    uint32_t timestamp;
+    if(int_flag) {
+        int_flag = 0;
+        mpu_get_gyro_reg(gyro_data,&timestamp);
+        mpu_get_accel_reg(accel_data,&timestamp);
+        log_printf("\r\n====\r\n");
+        log_printf("t:%d\r\n",get_timer());
+        log_printf("accel X:%d,Y:%d,Z:%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
+        log_printf("gyro X:%d,Y:%d,Z:%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
+    }
+}
+
+
+void EXTI9_5_IRQHandler(void) {
+    if(EXTI_GetITStatus(EXTI_Line5) != RESET) {
+        int_flag = 1;
+        EXTI_ClearITPendingBit(EXTI_Line5);
+    }
 }

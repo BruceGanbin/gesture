@@ -6,12 +6,12 @@
 
 /* Starting sampling rate. */
 //#define DEFAULT_MPU_HZ  (1000)
-#define DEFAULT_MPU_HZ  (2)
+#define DEFAULT_MPU_HZ  (100)
 #define COMPASS_READ_MS (100)
 
 
 int inv_mpu_init(void);
-
+void set_exit_int(void);
 unsigned char get_inv_mpu(void);
 
 #endif
