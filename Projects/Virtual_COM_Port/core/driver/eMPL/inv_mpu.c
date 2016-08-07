@@ -54,16 +54,17 @@
 #include "i2c.h"
 //#include "main.h"
 #include "log2.h"
+#include "log.h"
 #include "hw_timer.h"
 
 #define i2c_write   IIC_Write
 #define i2c_read    IIC_Read
 #define delay_ms    st_hw_msdelay
 #define get_ms      get_timer
-//#define log_i       MPL_LOGI
-//#define log_e       MPL_LOGE
-#define log_i       log_printf
-#define log_e       log_printf
+#define log_i       MPL_LOGI
+#define log_e       MPL_LOGE
+//#define log_i       log_printf
+//#define log_e       log_printf
 #define min(a,b) ((a<b)?a:b)
 
 #elif defined MOTION_DRIVER_TARGET_MSP430

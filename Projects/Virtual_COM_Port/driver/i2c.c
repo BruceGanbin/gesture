@@ -24,7 +24,6 @@ void I2C_init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
     I2C_InitTypeDef   I2C_InitStructure;
-    //    NVIC_InitTypeDef  NVIC_InitStructure;
 
     RCC_APB1PeriphClockCmd(I2C1_CLK,ENABLE);
     RCC_APB2PeriphClockCmd(I2C1_GPIO_CLK, ENABLE);
@@ -41,7 +40,7 @@ void I2C_init(void)
     I2C_InitStructure.I2C_OwnAddress1 = 0x00;
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed=150000;
+    I2C_InitStructure.I2C_ClockSpeed=100000;
     I2C_Init(I2C1,&I2C_InitStructure);
     I2C_Cmd(I2C1,ENABLE);
     I2C_DMACmd(I2C1, ENABLE);
@@ -50,7 +49,6 @@ void I2C_init(void)
 static void I2C_Dma_Config(IIC_RT_Typedef Dir,uint8_t *pbuffer,uint16_t NumData)
 {
     DMA_InitTypeDef DMA_InitStructure;
-
     RCC_AHBPeriphClockCmd( RCC_AHBPeriph_DMA1, ENABLE);
 
     /* Initialize the DMA_PeripheralBaseAddr member */

@@ -6,7 +6,7 @@
 
 /* Starting sampling rate. */
 //#define DEFAULT_MPU_HZ  (1000)
-#define DEFAULT_MPU_HZ  (100)
+#define DEFAULT_MPU_HZ  (50)
 #define COMPASS_READ_MS (100)
 
 

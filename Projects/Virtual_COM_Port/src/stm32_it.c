@@ -200,7 +200,7 @@ void USB_FS_WKUP_IRQHandler(void)
 void USBWakeUp_IRQHandler(void)
 #endif
 {
-  EXTI_ClearITPendingBit(EXTI_Line18);
+    //  EXTI_ClearITPendingBit(EXTI_Line18);
 }
 
 /******************************************************************************/

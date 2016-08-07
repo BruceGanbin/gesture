@@ -29,6 +29,11 @@
 #define I2C1_DMA_TX_CHANNEL           DMA1_Channel6
 #define I2C1_DMA_RX_CHANNEL           DMA1_Channel7
 
+#define I2C2_DMA_ADDR                 ((uint32_t)0x40005810)
+#define I2C2_DMA_CLK                  RCC_AHBPeriph_DMA1
+#define I2C2_DMA_TX_CHANNEL           DMA1_Channel4
+#define I2C2_DMA_RX_CHANNEL           DMA1_Channel5
+
 #define IIC_STOP()                    I2C_GenerateSTOP(I2C1,ENABLE)
 
 #define Rd                            0

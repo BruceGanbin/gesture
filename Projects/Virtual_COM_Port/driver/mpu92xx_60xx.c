@@ -97,13 +97,13 @@ int inv_mpu_init(void) {
     st_hw_msdelay(20);
     result = mpu_init(&int_param);
     if (result) {
-        log_printf("Could not initialize gyro.%d\n",result);
+        MPL_LOGI("Could not initialize gyro.%d\n",result);
         return -1;
     }
 
     result = inv_init_mpl();
     if (result) {
-        log_printf("Could not initialize MPL.\n");
+        MPL_LOGI("Could not initialize MPL.\n");
         return -1;
     }
 
@@ -124,11 +124,11 @@ int inv_mpu_init(void) {
     result = inv_start_mpl();
     if (result == INV_ERROR_NOT_AUTHORIZED) {
         while (1) {
-            log_printf("Not authorized.\n");
+            MPL_LOGI("Not authorized.\n");
         }
     }
     if (result) {
-        log_printf("Could not start the MPL.\n");
+        MPL_LOGI("Could not start the MPL.\n");
     }
 
     /* Get/set hardware configuration. Start gyro. */
@@ -191,7 +191,7 @@ int inv_mpu_init(void) {
 
     //    run_self_test();
     mpu_set_dmp_state(1);
-    
+    log_printf("mpu init OK\r\n");
     return 0;
 }
 
@@ -261,11 +261,11 @@ void run_self_test(void)
     }
     else {
             if (!(result & 0x1))
-                log_printf("Gyro failed.\n");
+                MPL_LOGI("Gyro failed.\n");
             if (!(result & 0x2))
-                log_printf("Accel failed.\n");
+                MPL_LOGI("Accel failed.\n");
             if (!(result & 0x4))
-                log_printf("Compass failed.\n");
+                MPL_LOGI("Compass failed.\n");
      }
 
 }
@@ -279,9 +279,13 @@ void get_senser(void) {
         int_flag = 0;
         mpu_get_gyro_reg(gyro_data,&timestamp);
         mpu_get_accel_reg(accel_data,&timestamp);
-        log_printf("\r\n====\r\n");
+//       MPL_LOGI("\r\n====");
+        log_printf("=====\r\n");
+        //        MPL_LOGI("t:%d",get_timer());
         log_printf("t:%d\r\n",get_timer());
+        //        MPL_LOGI("accel X:%d,Y:%d,Z:%d",accel_data[0],accel_data[1],accel_data[2]);
         log_printf("accel X:%d,Y:%d,Z:%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
+        //        MPL_LOGI("gyro X:%d,Y:%d,Z:%d",gyro_data[0],gyro_data[1],gyro_data[2]);
         log_printf("gyro X:%d,Y:%d,Z:%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
     }
 }

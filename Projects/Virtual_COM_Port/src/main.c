@@ -77,11 +77,11 @@ void usb_send_handle(void *parameter) {
 *******************************************************************************/
 int main(void)
 {
-//  Set_System();
+//    Set_System();
+//    Set_USBClock();
+//    USB_Interrupts_Config();
+//    USB_Init();
     sf_timer_init();
-//  Set_USBClock();
-//  USB_Interrupts_Config();
-//  USB_Init();
 
     serial_init();
     log_printf("hello world\r\n");
