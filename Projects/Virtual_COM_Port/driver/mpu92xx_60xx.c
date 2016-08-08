@@ -274,19 +274,33 @@ static uint8_t int_flag = 0;
 void get_senser(void) {
     short accel_data[3];
     short gyro_data[3];
+    float  accel[3];
+    float  gyro[3];
     uint32_t timestamp;
+    unsigned short accel_sens = 0;
+    float gyro_sens = 0;
     if(int_flag) {
         int_flag = 0;
         mpu_get_gyro_reg(gyro_data,&timestamp);
         mpu_get_accel_reg(accel_data,&timestamp);
+
+        mpu_get_accel_sens(&accel_sens);
+        accel[0] = ((float)accel_data[0]/accel_sens);
+	accel[1] = ((float)accel_data[1]/accel_sens);
+	accel[2] = ((float)accel_data[2]/accel_sens);
+
+        mpu_get_gyro_sens(&gyro_sens);
+        gyro[0] = gyro_data[0]/gyro_sens;
+        gyro[1] = gyro_data[1]/gyro_sens;
+        gyro[2] = gyro_data[2]/gyro_sens;
 //       MPL_LOGI("\r\n====");
         log_printf("=====\r\n");
         //        MPL_LOGI("t:%d",get_timer());
-        log_printf("t:%d\r\n",get_timer());
+        log_printf("t:%d\r\n",timestamp);
         //        MPL_LOGI("accel X:%d,Y:%d,Z:%d",accel_data[0],accel_data[1],accel_data[2]);
-        log_printf("accel X:%d,Y:%d,Z:%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
+        log_printf("accel X:%4.5f,Y:%4.5f,Z:%4.5f\r\n",accel[0],accel[1],accel[2]);
         //        MPL_LOGI("gyro X:%d,Y:%d,Z:%d",gyro_data[0],gyro_data[1],gyro_data[2]);
-        log_printf("gyro X:%d,Y:%d,Z:%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
+        log_printf(" gyro X:%4.5f,Y:%4.5f,Z:%4.5f\r\n",gyro[0],gyro[1],gyro[2]);
     }
 }
 
