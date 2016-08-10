@@ -20,7 +20,8 @@
 #define USART1_RX_SOURCE         GPIO_PinSource10
 #define USART1_TX_SOURCE         GPIO_PinSource9
 #define USART1_PORT              GPIOA
-#define USART1_BAUDRATE          115200
+//#define USART1_BAUDRATE          115200
+#define USART1_BAUDRATE          230400
 
 #define USART2_RX_PIN            GPIO_Pin_3
 #define USART2_TX_PIN            GPIO_Pin_2

@@ -8,6 +8,7 @@
 #include "i2c.h"
 #include "log.h"
 #include "stm32f10x.h"
+#include <math.h>
 
 void run_self_test(void);
 
@@ -148,12 +149,12 @@ int inv_mpu_init(void) {
     mpu_set_compass_sample_rate(1000 / COMPASS_READ_MS);
 #endif
     /* Read back configuration in case it was set improperly. */
-    mpu_get_sample_rate(&gyro_rate);
-    mpu_get_gyro_fsr(&gyro_fsr);
-    mpu_get_accel_fsr(&accel_fsr);
-#ifdef COMPASS_ENABLED
-    mpu_get_compass_fsr(&compass_fsr);
-#endif
+//    mpu_get_sample_rate(&gyro_rate);
+//    mpu_get_gyro_fsr(&gyro_fsr);
+//    mpu_get_accel_fsr(&accel_fsr);
+//#ifdef COMPASS_ENABLED
+//    mpu_get_compass_fsr(&compass_fsr);
+//#endif
     /* Sync driver configuration with MPL. */
     /* Sample rate expected in microseconds. */
 //    inv_set_gyro_sample_rate(1000000L / gyro_rate);
@@ -168,25 +169,25 @@ int inv_mpu_init(void) {
 //    /* Set chip-to-body orientation matrix.
 //     * Set hardware units to dps/g's/degrees scaling factor.
 //     */
-//    inv_set_gyro_orientation_and_scale(
-//            inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
-//            (long)gyro_fsr<<15);
-//    inv_set_accel_orientation_and_scale(
-//            inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
-//            (long)accel_fsr<<15);
-//#ifdef COMPASS_ENABLED
-//    inv_set_compass_orientation_and_scale(
-//            inv_orientation_matrix_to_scalar(compass_pdata.orientation),
-//            (long)compass_fsr<<15);
-//#endif
-// 
-//    dmp_load_motion_driver_firmware();
-//    dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_pdata.orientation));
+    inv_set_gyro_orientation_and_scale(
+	    inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
+	    (long)gyro_fsr<<15);
+    inv_set_accel_orientation_and_scale(
+	    inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
+	    (long)accel_fsr<<15);
+#ifdef COMPASS_ENABLED
+    inv_set_compass_orientation_and_scale(
+	    inv_orientation_matrix_to_scalar(compass_pdata.orientation),
+	    (long)compass_fsr<<15);
+#endif
+
+    dmp_load_motion_driver_firmware();
+    dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_pdata.orientation));
 //    
-//    dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP |
-//                       DMP_FEATURE_ANDROID_ORIENT | DMP_FEATURE_SEND_RAW_ACCEL |
-//                       DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
-    //    dmp_set_fifo_rate(DEFAULT_MPU_HZ);
+    dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP |
+		       DMP_FEATURE_ANDROID_ORIENT | DMP_FEATURE_SEND_RAW_ACCEL |
+		       DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
+    dmp_set_fifo_rate(DEFAULT_MPU_HZ);
     //    dmp_set_fifo_rate(20);
 
     //    run_self_test();
@@ -270,20 +271,29 @@ void run_self_test(void)
 
 }
 
+#define q30  1073741824.0f
+
 static uint8_t int_flag = 0;
 void get_senser(void) {
-    short accel_data[3];
-    short gyro_data[3];
+    short accel_data[3],gyro_data[3],sensors;
     float  accel[3];
     float  gyro[3];
-    uint32_t timestamp;
+    unsigned char more;
+    long quat[4];
+    unsigned long timestamp;
+    uint32_t timest;
     unsigned short accel_sens = 0;
     float gyro_sens = 0;
+    float Pitch,Roll,Yaw;
+    static float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
+
     if(int_flag) {
         int_flag = 0;
-        mpu_get_gyro_reg(gyro_data,&timestamp);
-        mpu_get_accel_reg(accel_data,&timestamp);
-
+        log_printf("\r\n");
+//        mpu_get_gyro_reg(gyro_data,&timestamp);
+//        mpu_get_accel_reg(accel_data,&timestamp);
+        dmp_read_fifo(gyro_data,accel_data,quat,&timestamp,&sensors,&more);
+        log_printf("t:%d\r\n",timestamp);
         mpu_get_accel_sens(&accel_sens);
         accel[0] = ((float)accel_data[0]/accel_sens);
 	accel[1] = ((float)accel_data[1]/accel_sens);
@@ -293,15 +303,30 @@ void get_senser(void) {
         gyro[0] = gyro_data[0]/gyro_sens;
         gyro[1] = gyro_data[1]/gyro_sens;
         gyro[2] = gyro_data[2]/gyro_sens;
-//       MPL_LOGI("\r\n====");
-        log_printf("=====\r\n");
+
+        if(sensors & INV_WXYZ_QUAT) {
+            q0=quat[0] / q30;
+            q1=quat[1] / q30;
+            q2=quat[2] / q30;
+            q3=quat[3] / q30;
+            Pitch  = asin(2 * q1 * q3 - 2 * q0* q2)* 57.3; // pitch
+            Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
+            Yaw =  atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;
+            log_printf("pi:%3.5f,ro:%3.5f,ya:%3.5f\r\n",Pitch,Roll,Yaw);
+        }
+        log_printf("a X:%2.5f,Y:%2.5f,Z:%2.5f\r\n",accel[0],accel[1],accel[2]);
+        log_printf("g X:%3.5f,Y:%3.5f,Z:%3.5f\r\n",gyro[0],gyro[1],gyro[2]);
+
+        //       MPL_LOGI("\r\n====");
         //        MPL_LOGI("t:%d",get_timer());
-        log_printf("t:%d\r\n",timestamp);
         //        MPL_LOGI("accel X:%d,Y:%d,Z:%d",accel_data[0],accel_data[1],accel_data[2]);
-        log_printf("accel X:%4.5f,Y:%4.5f,Z:%4.5f\r\n",accel[0],accel[1],accel[2]);
         //        MPL_LOGI("gyro X:%d,Y:%d,Z:%d",gyro_data[0],gyro_data[1],gyro_data[2]);
-        log_printf(" gyro X:%4.5f,Y:%4.5f,Z:%4.5f\r\n",gyro[0],gyro[1],gyro[2]);
+
+//        log_printf("quat :q1%ld ,q2%ld, q3%ld ,q4%ld\r\n",quat[0],quat[1],quat[2],quat[3]);
+//        timest = get_timer();
+//        log_printf("t2%d\r\n",timest);
     }
+
 }
 
 

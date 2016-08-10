@@ -40,7 +40,7 @@ void I2C_init(void)
     I2C_InitStructure.I2C_OwnAddress1 = 0x00;
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed=100000;
+    I2C_InitStructure.I2C_ClockSpeed=200000;
     I2C_Init(I2C1,&I2C_InitStructure);
     I2C_Cmd(I2C1,ENABLE);
     I2C_DMACmd(I2C1, ENABLE);
@@ -103,6 +103,13 @@ static void I2C_Dma_Config(IIC_RT_Typedef Dir,uint8_t *pbuffer,uint16_t NumData)
 
 unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWrite,uint8_t *pBuffer)
 {
+    TimeOut = I2C_TimeOut;
+    while (I2C_GetFlagStatus(I2C1,I2C_FLAG_BUSY)) {
+        if ((TimeOut --) == 0) {
+            I2C_State = I2C_RTimeOut;
+            return  I2C_RTimeOut;
+        }
+    }
     /*send Start condition,test on EV5 and clear it*/
     TimeOut=I2C_TimeOut;
     I2C_GenerateSTART(I2C1, ENABLE);
@@ -190,6 +197,13 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
 
 unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead,uint8_t *pBuffer)
 {
+    TimeOut = I2C_TimeOut;
+    while (I2C_GetFlagStatus(I2C1,I2C_FLAG_BUSY)) {
+        if ((TimeOut --) == 0) {
+            I2C_State = I2C_RTimeOut;
+            return  I2C_RTimeOut;
+        }
+    }
     I2C_AcknowledgeConfig(I2C1, ENABLE);
     /*send Start condition,test on EV5 and clear it*/
     TimeOut = I2C_TimeOut;
