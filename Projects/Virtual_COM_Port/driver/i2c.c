@@ -103,6 +103,7 @@ static void I2C_Dma_Config(IIC_RT_Typedef Dir,uint8_t *pbuffer,uint16_t NumData)
 
 unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWrite,uint8_t *pBuffer)
 {
+    __disable_irq();
     TimeOut = I2C_TimeOut;
     while (I2C_GetFlagStatus(I2C1,I2C_FLAG_BUSY)) {
         if ((TimeOut --) == 0) {
@@ -188,15 +189,13 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
         /*send STOP condition*/
         I2C_GenerateSTOP(I2C1, ENABLE);
     }
-    __nop();
-    __nop();
-    __nop();
-    __nop();
+    __enable_irq();
     return  I2C_NOTimeout;
 }
 
 unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead,uint8_t *pBuffer)
 {
+    __disable_irq();
     TimeOut = I2C_TimeOut;
     while (I2C_GetFlagStatus(I2C1,I2C_FLAG_BUSY)) {
         if ((TimeOut --) == 0) {
@@ -304,7 +303,7 @@ unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead
             }
         }
     }
-
+    __enable_irq();
     return  I2C_NOTimeout;
 }
 

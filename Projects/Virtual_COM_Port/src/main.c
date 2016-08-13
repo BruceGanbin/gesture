@@ -64,8 +64,10 @@ void usb_send_handle(void *parameter) {
     //    run_self_test();
 //    mpu_get_gyro_reg(gyro_data,&i);
 //    mpu_get_accel_reg(accel_data,&i);
-    log_printf("accel %d,%d,%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
-    log_printf("gyro %d,%d,%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
+//    log_printf("accel %d,%d,%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
+//    log_printf("gyro %d,%d,%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
+
+    MPL_LOGI("%dusb",i++);
 }
 
 /*******************************************************************************
@@ -77,10 +79,10 @@ void usb_send_handle(void *parameter) {
 *******************************************************************************/
 int main(void)
 {
-//    Set_System();
-//    Set_USBClock();
-//    USB_Interrupts_Config();
-//    USB_Init();
+    Set_System();
+    Set_USBClock();
+    USB_Interrupts_Config();
+    USB_Init();
     sf_timer_init();
 
     serial_init();
@@ -89,14 +91,14 @@ int main(void)
 
     inv_mpu_init();
   
-//  usb_timer.func = usb_send_handle;
-//  usb_timer.timeout_tick = 1000;
-//  cre_sf_timer(&usb_timer,0);
-  while (1)
-  {
-      get_senser();
-      sf_timer_proc();
-  }
+//   usb_timer.func = usb_send_handle;
+//   usb_timer.timeout_tick = 1000;
+//   cre_sf_timer(&usb_timer,0);
+    while (1)
+    {
+        get_senser();
+        sf_timer_proc();
+    }
 }
 #ifdef USE_FULL_ASSERT
 /*******************************************************************************

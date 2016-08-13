@@ -178,8 +178,8 @@ extern "C" {
 #ifdef __KERNEL__
 #define MPL_LOGI(fmt, ...) pr_info(KERN_INFO MPL_LOG_TAG fmt, ##__VA_ARGS__)
 #else
-    //#define MPL_LOGI(fmt, ...) MPL_LOG(LOG_INFO, MPL_LOG_TAG, fmt, ##__VA_ARGS__)
-#define MPL_LOGI log_printf
+#define MPL_LOGI(fmt, ...) MPL_LOG(LOG_INFO, MPL_LOG_TAG, fmt, ##__VA_ARGS__)
+    //#define MPL_LOGI log_printf
 #endif
 #endif
 
@@ -215,8 +215,8 @@ extern "C" {
 #ifdef __KERNEL__
 #define MPL_LOGE(fmt, ...) printk(KERN_ERR MPL_LOG_TAG fmt, ##__VA_ARGS__)
 #else
-    //#define MPL_LOGE(fmt, ...) MPL_LOG(LOG_ERROR, MPL_LOG_TAG, fmt, ##__VA_ARGS__)
-#define MPL_LOGE     log_printf
+    #define MPL_LOGE(fmt, ...) MPL_LOG(LOG_ERROR, MPL_LOG_TAG, fmt, ##__VA_ARGS__)
+    //#define MPL_LOGE     log_printf
 #endif
 #endif
 

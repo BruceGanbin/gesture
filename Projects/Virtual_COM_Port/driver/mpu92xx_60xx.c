@@ -98,13 +98,13 @@ int inv_mpu_init(void) {
     st_hw_msdelay(20);
     result = mpu_init(&int_param);
     if (result) {
-        MPL_LOGI("Could not initialize gyro.%d\n",result);
+        log_printf("Could not initialize gyro.%d\n",result);
         return -1;
     }
 
     result = inv_init_mpl();
     if (result) {
-        MPL_LOGI("Could not initialize MPL.\n");
+        log_printf("Could not initialize MPL.\n");
         return -1;
     }
 
@@ -122,15 +122,15 @@ int inv_mpu_init(void) {
 
     inv_enable_eMPL_outputs();
 
-    result = inv_start_mpl();
-    if (result == INV_ERROR_NOT_AUTHORIZED) {
-        while (1) {
-            MPL_LOGI("Not authorized.\n");
-        }
-    }
-    if (result) {
-        MPL_LOGI("Could not start the MPL.\n");
-    }
+//    result = inv_start_mpl();
+//    if (result == INV_ERROR_NOT_AUTHORIZED) {
+//        while (1) {
+//            MPL_LOGI("Not authorized.\n");
+//        }
+//    }
+//    if (result) {
+//        MPL_LOGI("Could not start the MPL.\n");
+//    }
 
     /* Get/set hardware configuration. Start gyro. */
     /* Wake up all sensors. */
@@ -262,11 +262,11 @@ void run_self_test(void)
     }
     else {
             if (!(result & 0x1))
-                MPL_LOGI("Gyro failed.\n");
+                log_printf("Gyro failed.\n");
             if (!(result & 0x2))
-                MPL_LOGI("Accel failed.\n");
+                log_printf("Accel failed.\n");
             if (!(result & 0x4))
-                MPL_LOGI("Compass failed.\n");
+                log_printf("Compass failed.\n");
      }
 
 }
@@ -289,11 +289,13 @@ void get_senser(void) {
 
     if(int_flag) {
         int_flag = 0;
-        log_printf("\r\n");
+        MPL_LOGI("t1 %d",get_timer());
+        //        log_printf("\r\n");
 //        mpu_get_gyro_reg(gyro_data,&timestamp);
 //        mpu_get_accel_reg(accel_data,&timestamp);
         dmp_read_fifo(gyro_data,accel_data,quat,&timestamp,&sensors,&more);
-        log_printf("t:%d\r\n",timestamp);
+        //        log_printf("t:%d\r\n",timestamp);
+        MPL_LOGI("t:%d",timestamp);
         mpu_get_accel_sens(&accel_sens);
         accel[0] = ((float)accel_data[0]/accel_sens);
 	accel[1] = ((float)accel_data[1]/accel_sens);
@@ -303,8 +305,8 @@ void get_senser(void) {
         gyro[0] = gyro_data[0]/gyro_sens;
         gyro[1] = gyro_data[1]/gyro_sens;
         gyro[2] = gyro_data[2]/gyro_sens;
-
-        if(sensors & INV_WXYZ_QUAT) {
+        //        MPL_LOGI("t2 %d",get_timer());
+	if(sensors & INV_WXYZ_QUAT) {
             q0=quat[0] / q30;
             q1=quat[1] / q30;
             q2=quat[2] / q30;
@@ -312,16 +314,17 @@ void get_senser(void) {
             Pitch  = asin(2 * q1 * q3 - 2 * q0* q2)* 57.3; // pitch
             Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
             Yaw =  atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;
-            log_printf("pi:%3.5f,ro:%3.5f,ya:%3.5f\r\n",Pitch,Roll,Yaw);
+            //	    log_printf("pi:%3.5f,ro:%3.5f,ya:%3.5f\r\n",Pitch,Roll,Yaw);
+            MPL_LOGI("pi:%3.5f,ro:%3.5f,ya:%3.5f",Pitch,Roll,Yaw);
         }
-        log_printf("a X:%2.5f,Y:%2.5f,Z:%2.5f\r\n",accel[0],accel[1],accel[2]);
-        log_printf("g X:%3.5f,Y:%3.5f,Z:%3.5f\r\n",gyro[0],gyro[1],gyro[2]);
+//        log_printf("a X:%2.5f,Y:%2.5f,Z:%2.5f\r\n",accel[0],accel[1],accel[2]);
+//        log_printf("g X:%3.5f,Y:%3.5f,Z:%3.5f\r\n",gyro[0],gyro[1],gyro[2]);
 
-        //       MPL_LOGI("\r\n====");
-        //        MPL_LOGI("t:%d",get_timer());
-        //        MPL_LOGI("accel X:%d,Y:%d,Z:%d",accel_data[0],accel_data[1],accel_data[2]);
-        //        MPL_LOGI("gyro X:%d,Y:%d,Z:%d",gyro_data[0],gyro_data[1],gyro_data[2]);
-
+// print  to usb
+        //        MPL_LOGI("t3 %d",get_timer());
+        MPL_LOGI("a X:%2.5f,Y:%2.5f,Z:%2.5f",accel[0],accel[1],accel[2]);
+        MPL_LOGI("g X:%3.5f,Y:%3.5f,Z:%3.5f",gyro[0],gyro[1],gyro[2]);
+        MPL_LOGI("t4 %d\r\n",get_timer());
 //        log_printf("quat :q1%ld ,q2%ld, q3%ld ,q4%ld\r\n",quat[0],quat[1],quat[2],quat[3]);
 //        timest = get_timer();
 //        log_printf("t2%d\r\n",timest);
