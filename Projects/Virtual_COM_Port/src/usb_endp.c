@@ -138,7 +138,9 @@ void EP3_OUT_Callback(void)
   
   /* USB data will be immediately processed, this allow next USB traffic being 
   NAKed till the end of the USART Xfer */
-  
+  if(USB_Rx_Cnt == 1) {
+      mpu_output_set(USB_Rx_Buffer);
+  }
   //  USB_To_USART_Send_Data(USB_Rx_Buffer, USB_Rx_Cnt);
  
   /* Enable the receive of data on EP3 */
