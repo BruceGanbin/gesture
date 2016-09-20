@@ -743,7 +743,7 @@ int dmp_set_tap_thresh(unsigned char axis, unsigned short thresh)
 
     scaled_thresh = (float)thresh / DMP_SAMPLE_RATE;
 
-    mpu_get_accel_fsr(&accel_fsr);
+    mpu_get_accel_fsr(&accel_fsr,DEVICE_1);
     switch (accel_fsr) {
     case 2:
         dmp_thresh = (unsigned short)(scaled_thresh * 16384);

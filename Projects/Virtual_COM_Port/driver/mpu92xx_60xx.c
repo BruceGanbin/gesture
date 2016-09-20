@@ -96,31 +96,31 @@ int inv_mpu_init(void) {
     I2C_init();
     set_exit_int();
     st_hw_msdelay(20);
-    result = mpu_init(&int_param);
+    result = mpu_init(&int_param, DEVICE_1);
     if (result) {
         log_printf("Could not initialize gyro.%d\n",result);
         return -1;
     }
 
-    result = inv_init_mpl();
-    if (result) {
-        log_printf("Could not initialize MPL.\n");
-        return -1;
-    }
+//    result = inv_init_mpl();
+//    if (result) {
+//        log_printf("Could not initialize MPL.\n");
+//        return -1;
+//    }
 
-    inv_enable_quaternion();
-    inv_enable_9x_sensor_fusion();
-
-    inv_enable_fast_nomot();
-    inv_enable_gyro_tc();
-
-#ifdef COMPASS_ENABLED
-    /* Compass calibration algorithms. */
-    inv_enable_vector_compass_cal();
-    inv_enable_magnetic_disturbance();
-#endif
-
-    inv_enable_eMPL_outputs();
+//    inv_enable_quaternion();
+//    inv_enable_9x_sensor_fusion();
+// 
+//    inv_enable_fast_nomot();
+//    inv_enable_gyro_tc();
+// 
+//#ifdef COMPASS_ENABLED
+//    /* Compass calibration algorithms. */
+//    inv_enable_vector_compass_cal();
+//    inv_enable_magnetic_disturbance();
+//#endif
+// 
+//    inv_enable_eMPL_outputs();
 
 //    result = inv_start_mpl();
 //    if (result == INV_ERROR_NOT_AUTHORIZED) {
@@ -141,7 +141,7 @@ int inv_mpu_init(void) {
 #endif
     /* Push both gyro and accel data into the FIFO. */
     mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL);
-    mpu_set_sample_rate(DEFAULT_MPU_HZ);
+    mpu_set_sample_rate(DEFAULT_MPU_HZ, DEVICE_1);
 #ifdef COMPASS_ENABLED
     /* The compass sampling rate can be less than the gyro/accel sampling rate.
      * Use this function for proper power management.
@@ -169,17 +169,17 @@ int inv_mpu_init(void) {
 //    /* Set chip-to-body orientation matrix.
 //     * Set hardware units to dps/g's/degrees scaling factor.
 //     */
-    inv_set_gyro_orientation_and_scale(
-	    inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
-	    (long)gyro_fsr<<15);
-    inv_set_accel_orientation_and_scale(
-	    inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
-	    (long)accel_fsr<<15);
-#ifdef COMPASS_ENABLED
-    inv_set_compass_orientation_and_scale(
-	    inv_orientation_matrix_to_scalar(compass_pdata.orientation),
-	    (long)compass_fsr<<15);
-#endif
+//    inv_set_gyro_orientation_and_scale(
+//            inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
+//            (long)gyro_fsr<<15);
+//    inv_set_accel_orientation_and_scale(
+//            inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
+//            (long)accel_fsr<<15);
+//#ifdef COMPASS_ENABLED
+//    inv_set_compass_orientation_and_scale(
+//            inv_orientation_matrix_to_scalar(compass_pdata.orientation),
+//            (long)compass_fsr<<15);
+//#endif
 
     dmp_load_motion_driver_firmware();
     dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_pdata.orientation));
@@ -202,7 +202,7 @@ void run_self_test(void)
     long gyro[3], accel[3];
 
 #if defined (MPU6500) || defined (MPU9250)
-    result = mpu_run_6500_self_test(gyro, accel, 1);
+    result = mpu_run_6500_self_test(gyro, accel, DEVICE_1, 1);
 #elif defined (MPU6050) || defined (MPU9150)
     result = mpu_run_self_test(gyro, accel);
 #endif

@@ -28,6 +28,9 @@
 #define INV_XYZ_ACCEL   (0x08)
 #define INV_XYZ_COMPASS (0x01)
 
+#define DEVICE_1         1
+#define DEVICE_2         2
+
 struct int_param_s {
 #if defined EMPL_TARGET_MSP430 || defined MOTION_DRIVER_TARGET_MSP430
     void (*cb)(void);
@@ -59,7 +62,7 @@ struct int_param_s {
 #define MPU_INT_STATUS_DMP_5            (0x2000)
 
 /* Set up APIs */
-int mpu_init(struct int_param_s *int_param);
+int mpu_init(struct int_param_s *int_param,unsigned char dev);
 int mpu_init_slave(void);
 int mpu_set_bypass(unsigned char bypass_on);
 
@@ -73,22 +76,22 @@ int mpu_set_int_latched(unsigned char enable);
 int mpu_set_dmp_state(unsigned char enable);
 int mpu_get_dmp_state(unsigned char *enabled);
 
-int mpu_get_lpf(unsigned short *lpf);
-int mpu_set_lpf(unsigned short lpf);
+int mpu_get_lpf(unsigned short *lpf, unsigned char dev);
+int mpu_set_lpf(unsigned short lpf, unsigned char dev);
 
-int mpu_get_gyro_fsr(unsigned short *fsr);
-int mpu_set_gyro_fsr(unsigned short fsr);
+int mpu_get_gyro_fsr(unsigned short *fsr, unsigned char dev);
+int mpu_set_gyro_fsr(unsigned short fsr, unsigned char dev);
 
-int mpu_get_accel_fsr(unsigned char *fsr);
-int mpu_set_accel_fsr(unsigned char fsr);
+int mpu_get_accel_fsr(unsigned char *fsr, unsigned char dev);
+int mpu_set_accel_fsr(unsigned char fsr, unsigned char dev);
 
 int mpu_get_compass_fsr(unsigned short *fsr);
 
 int mpu_get_gyro_sens(float *sens);
 int mpu_get_accel_sens(unsigned short *sens);
 
-int mpu_get_sample_rate(unsigned short *rate);
-int mpu_set_sample_rate(unsigned short rate);
+int mpu_get_sample_rate(unsigned short *rate, unsigned char dev);
+int mpu_set_sample_rate(unsigned short rate ,unsigned char dev);
 int mpu_get_compass_sample_rate(unsigned short *rate);
 int mpu_set_compass_sample_rate(unsigned short rate);
 
@@ -126,8 +129,8 @@ int mpu_load_firmware(unsigned short length, const unsigned char *firmware,
 
 int mpu_reg_dump(void);
 int mpu_read_reg(unsigned char reg, unsigned char *data);
-int mpu_run_self_test(long *gyro, long *accel);
-int mpu_run_6500_self_test(long *gyro, long *accel, unsigned char debug);
+int mpu_run_self_test(long *gyro, long *accel,unsigned char dev);
+int mpu_run_6500_self_test(long *gyro, long *accel,unsigned char dev, unsigned char debug);
 int mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));
 
 #endif  /* #ifndef _INV_MPU_H_ */
