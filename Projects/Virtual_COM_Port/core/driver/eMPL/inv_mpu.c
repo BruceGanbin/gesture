@@ -61,10 +61,10 @@
 #define i2c_read    IIC_Read
 #define delay_ms    st_hw_msdelay
 #define get_ms      get_timer
-#define log_i       MPL_LOGI
-#define log_e       MPL_LOGE
-//#define log_i       log_printf
-//#define log_e       log_printf
+//#define log_i       MPL_LOGI
+//#define log_e       MPL_LOGE
+#define log_i       log_printf
+#define log_e       log_printf
 #define min(a,b) ((a<b)?a:b)
 
 #elif defined MOTION_DRIVER_TARGET_MSP430
@@ -517,7 +517,20 @@ const struct gyro_reg_s reg = {
     .i2c_delay_ctrl = 0x67
 #endif
 };
-const struct hw_s hw = {
+//const struct hw_s hw = {
+//    //    .addr           = 0x68,
+//    .addr           = 0xD0,
+//    .max_fifo       = 1024,
+//    .num_reg        = 118,
+//    .temp_sens      = 340,
+//    .temp_offset    = -521,
+//    .bank_size      = 256
+//#if defined AK89xx_SECONDARY
+//    ,.compass_fsr    = AK89xx_FSR
+//#endif
+//};
+
+struct hw_s hw = {
     //    .addr           = 0x68,
     .addr           = 0xD0,
     .max_fifo       = 1024,
@@ -598,7 +611,20 @@ const struct gyro_reg_s reg = {
     .i2c_delay_ctrl = 0x67
 #endif
 };
-const struct hw_s hw = {
+//const struct hw_s hw = {
+//    //    .addr           = 0x68,
+//    .addr           = 0xD0,
+//    .max_fifo       = 1024,
+//    .num_reg        = 128,
+//    .temp_sens      = 321,
+//    .temp_offset    = 0,
+//    .bank_size      = 256
+//#if defined AK89xx_SECONDARY
+//    ,.compass_fsr    = AK89xx_FSR
+//#endif
+//};
+
+struct hw_s hw = {
     //    .addr           = 0x68,
     .addr           = 0xD0,
     .max_fifo       = 1024,
@@ -735,6 +761,10 @@ int mpu_init(struct int_param_s *int_param)
     unsigned char data[6];
     int ret;
 
+    if(i2c_read(st.hw->addr, st.reg->who_am_i, 1, data))
+        return -1;
+    log_i("WHO AM I 0x%x",data[0]);
+    
     /* Reset device. */
     data[0] = BIT_RESET;
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
@@ -797,10 +827,7 @@ int mpu_init(struct int_param_s *int_param)
 #endif
 
 #ifdef AK89xx_SECONDARY
-    //    if(setup_compass())
-    ret = setup_compass();
-    if(ret) {
-        log_printf("com%d\r\n",ret);
+    if(setup_compass()) {
         return -1;
     }
     if (mpu_set_compass_sample_rate(10))
@@ -813,6 +840,21 @@ int mpu_init(struct int_param_s *int_param)
 
     mpu_set_sensors(0);
     return 0;
+}
+
+int mpu_dev(unsigned char dev){
+    int ret = 0;
+    switch(dev) {
+        case 1:
+            hw.addr = 0xD0;
+            ret = 1;
+            break;
+        case 2:
+            hw.addr = 0xD2;
+            ret = 2;
+            break;
+    }
+    return ret;
 }
 
 /**

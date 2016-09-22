@@ -85,6 +85,25 @@ void set_exit_int(void) {
     NVIC_Init(&NVIC_InitStructure);
 }
 
+int mpu_dev_init(void) {
+    I2C_init();
+    set_exit_int();
+    // set dev1 addr
+    mpu_dev(1);
+    if(inv_mpu_init()) {
+        return -1;
+    }
+    log_printf("dev1 mpu init OK\r\n");
+
+    // set dev1 addr
+    mpu_dev(2);
+    if(inv_mpu_init()) {
+        return -1;
+    }
+    log_printf("dev2 mpu init OK\r\n");
+    return 0;
+}
+
 int inv_mpu_init(void) {
     inv_error_t result;
     unsigned char accel_fsr;
@@ -93,8 +112,7 @@ int inv_mpu_init(void) {
     unsigned short compass_fsr;
 #endif
 
-    I2C_init();
-    set_exit_int();
+
     st_hw_msdelay(20);
     result = mpu_init(&int_param);
     if (result) {
@@ -192,7 +210,7 @@ int inv_mpu_init(void) {
 
     //    run_self_test();
     mpu_set_dmp_state(1);
-    log_printf("mpu init OK\r\n");
+
     return 0;
 }
 
