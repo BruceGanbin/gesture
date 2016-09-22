@@ -67,7 +67,7 @@ void usb_send_handle(void *parameter) {
 //    log_printf("accel %d,%d,%d\r\n",accel_data[0],accel_data[1],accel_data[2]);
 //    log_printf("gyro %d,%d,%d\r\n",gyro_data[0],gyro_data[1],gyro_data[2]);
 
-    MPL_LOGI("%dusb",i++);
+    usb_printf("%dusb",i++);
 }
 
 /*******************************************************************************

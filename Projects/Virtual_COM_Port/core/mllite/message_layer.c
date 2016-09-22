@@ -14,7 +14,7 @@
  *       @brief Holds Low Occurance Messages.
  */
 #include "message_layer.h"
-#include "log.h"
+#include "log_mpu.h"
 
 struct message_holder_t {
     long message;

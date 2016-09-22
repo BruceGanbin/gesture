@@ -25,7 +25,7 @@
 #include <stdarg.h>
 
 #include "packet.h"
-#include "log.h"
+#include "log_mpu.h"
 //#include "stm32f4xx.h"
 //#include "uart.h"
 #include "hw_config.h"

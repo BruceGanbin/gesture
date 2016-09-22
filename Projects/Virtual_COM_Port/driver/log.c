@@ -1,10 +1,10 @@
-#include "log2.h"
 #include "stm32f10x_usart.h"
 #include "stm32f10x.h"
 #include "stm32_serial.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "log.h"
 
 typedef enum {
     LOG_DISABLE = 0,
@@ -27,15 +27,23 @@ static void sendstring(char *str)
 
 void log_printf(char* format,...)
 {
-    va_list ap;
-    if(log_start == LOG_ENABLE)
-    {
-        va_start(ap,format);
-        vsprintf(buffer,format,ap);
+    va_list args;
+    if(log_start == LOG_ENABLE) {
+        va_start(args,format);
+        vsprintf(buffer,format,args);
         sendstring(buffer);
-        va_end(ap);
+        va_end(args);
     }
+}
 
+void usb_printf(char* format,...)
+{
+    va_list args;
+    int len;
+    va_start(args,format);
+    len = vsprintf(buffer,format,args);
+    send_to_usb(buffer,len);
+    va_end(args);
 }
 
 void log_disable(void)

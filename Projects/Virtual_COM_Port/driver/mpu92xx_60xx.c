@@ -225,12 +225,12 @@ void run_self_test(void)
     result = mpu_run_self_test(gyro, accel);
 #endif
     if (result == 0x7) {
-	MPL_LOGI("Passed!\n");
-        MPL_LOGI("accel: %7.4f %7.4f %7.4f\n",
+	log_printf("Passed!\n");
+        log_printf("accel: %7.4f %7.4f %7.4f\n",
                     accel[0]/65536.f,
                     accel[1]/65536.f,
                     accel[2]/65536.f);
-        MPL_LOGI("gyro: %7.4f %7.4f %7.4f\n",
+        log_printf("gyro: %7.4f %7.4f %7.4f\n",
                     gyro[0]/65536.f,
                     gyro[1]/65536.f,
                     gyro[2]/65536.f);
@@ -298,19 +298,19 @@ void mpu_output_set(uint8_t * data) {
 
     if(*data == '1') {
 	config_ouput = EULER_MARK;
-	MPL_LOGI("output euler");
+	usb_printf("output euler\r\n");
 	log_printf("out put euler\r\n");
     } else if(*data =='2') {
 	config_ouput = ACCEL_MARK;
-	MPL_LOGI("output accel");
+	usb_printf("output accel\r\n");
 	log_printf("out put accel\r\n");
     } else if(*data == '3') {
 	config_ouput = GYRO_MARK;
-	MPL_LOGI("output gyro");
+	usb_printf("output gyro\r\n");
 	log_printf("out put gyro\r\n");
     } else if(*data == '0') {
 	config_ouput = (EULER_MARK | ACCEL_MARK | GYRO_MARK);
-	MPL_LOGI("output data");
+	usb_printf("output data\r\n");
 	log_printf("output data\r\n");
     }
 }
@@ -337,7 +337,7 @@ void get_senser(void) {
 
         dmp_read_fifo(gyro_data,accel_data,quat,&timestamp,&sensors,&more);
 
-        MPL_LOGI("t:%d",timestamp);
+        usb_printf("t:%d",timestamp);
         mpu_get_accel_sens(&accel_sens);
         accel[0] = ((float)accel_data[0]/accel_sens);
 	accel[1] = ((float)accel_data[1]/accel_sens);
@@ -357,17 +357,15 @@ void get_senser(void) {
             Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
             Yaw =  atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;
             if(config_ouput & EULER_MARK) {
-                //                MPL_LOGI("pi:%3.5f,ro:%3.5f,ya:%3.5f",Pitch,Roll,Yaw);
-                MPL_LOGI("e %3.5f,%3.5f,%3.5f",Pitch,Roll,Yaw);
+                usb_printf("e %3.5f,%3.5f,%3.5f",Pitch,Roll,Yaw);
             }
         }
 // print  to usb
-        //        MPL_LOGI("t3 %d",get_timer());
         if(config_ouput & ACCEL_MARK) {
-            MPL_LOGI("a %2.5f,%2.5f,%2.5f",accel[0],accel[1],accel[2]);
+            usb_printf("a %2.5f,%2.5f,%2.5f",accel[0],accel[1],accel[2]);
         }
         if(config_ouput & GYRO_MARK) {
-            MPL_LOGI("g %3.5f,%3.5f,%3.5f",gyro[0],gyro[1],gyro[2]);
+            usb_printf("g %3.5f,%3.5f,%3.5f",gyro[0],gyro[1],gyro[2]);
         }
     }
 

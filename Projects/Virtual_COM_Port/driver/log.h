@@ -12,6 +12,7 @@
 
 
 void log_printf(char* format,...);
+void usb_printf(char* format,...);
 void log_disable(void);
 void log_enable(void);
 

@@ -44,7 +44,7 @@
 #elif defined  (STM32F10X_HD) || (defined STM32F10X_MD) || (defined STM32F10X_LD)
 #include "i2c.h"
 //#include "main.h"
-#include "log2.h"
+#include "log_mpu.h"
 #include "hw_timer.h"
 
 #define i2c_write   IIC_Write
@@ -79,7 +79,7 @@
  */
 #include "delay.h"
 #include "sysclk.h"
-#include "log.h"
+#include "log_mpu.h"
 #include "uc3l0_clock.h"
 /* delay_ms is a function already defined in ASF. */
 #define get_ms  uc3l0_get_clock_ms

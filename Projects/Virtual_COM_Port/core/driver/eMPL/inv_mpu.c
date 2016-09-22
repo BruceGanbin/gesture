@@ -39,7 +39,7 @@
 #if defined (EMPL_TARGET_STM32F4)
 #include "i2c.h"
 #include "main.h"
-#include "log.h"
+#include "log_mpu.h"
 #include "board-st_discovery.h"
    
 #define i2c_write   Sensors_I2C_WriteRegister
@@ -53,8 +53,8 @@
 #elif defined  (STM32F10X_HD) || (defined STM32F10X_MD) || (defined STM32F10X_LD)
 #include "i2c.h"
 //#include "main.h"
-#include "log2.h"
-#include "log.h"
+#include "log_mpu.h"
+#include "log_mpu.h"
 #include "hw_timer.h"
 
 #define i2c_write   IIC_Write
@@ -92,7 +92,7 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #include "msp430_i2c.h"
 #include "msp430_clock.h"
 #include "msp430_interrupt.h"
-#include "log.h"
+#include "log_mpu.h"
 #define i2c_write   msp430_i2c_write
 #define i2c_read    msp430_i2c_read
 #define delay_ms    msp430_delay_ms
@@ -115,7 +115,7 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #include "twi.h"
 #include "delay.h"
 #include "sysclk.h"
-#include "log.h"
+#include "log_mpu.h"
 #include "sensors_xplained.h"
 #include "uc3l0_clock.h"
 #define i2c_write(a, b, c, d)   twi_write(a, b, d, c)
