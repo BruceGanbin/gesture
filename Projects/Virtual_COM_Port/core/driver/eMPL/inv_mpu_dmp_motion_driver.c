@@ -51,10 +51,10 @@
 #define i2c_read    IIC_Read
 #define delay_ms    st_hw_msdelay
 #define get_ms      get_timer
-#define log_i       MPL_LOGI
-#define log_e       MPL_LOGE
-//#define log_i       log_printf
-//#define log_e       log_printf
+//#define log_i       MPL_LOGI
+//#define log_e       MPL_LOGE
+#define log_i       log_printf
+#define log_e       log_printf
 
 #elif defined MOTION_DRIVER_TARGET_MSP430
 #include "msp430.h"
@@ -67,7 +67,7 @@
 #elif defined EMPL_TARGET_MSP430
 #include "msp430.h"
 #include "msp430_clock.h"
-#include "log.h"
+#include "log_mpu.h"
 #define delay_ms    msp430_delay_ms
 #define get_ms      msp430_get_clock_ms
 #define log_i       MPL_LOGI

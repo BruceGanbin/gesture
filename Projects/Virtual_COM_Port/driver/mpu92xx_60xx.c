@@ -12,6 +12,9 @@
 
 void run_self_test(void);
 
+unsigned char int_flg[4];
+float  Q0[4],Q1[4],Q2[4],Q3[4];
+
 unsigned char *mpl_key = (unsigned char*)"eMPL 5.1";
 
 struct platform_data_s {
@@ -70,12 +73,15 @@ void set_exit_int(void) {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource5);
-    /* Configure EXTI4 line */
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource8);
+    /* Configure  line */
 
     EXTI_InitStructure.EXTI_Line = EXTI_Line5;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line8;
     EXTI_Init(&EXTI_InitStructure);
 
     NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
@@ -86,21 +92,30 @@ void set_exit_int(void) {
 }
 
 int mpu_dev_init(void) {
+    unsigned char i;
     I2C_init();
     set_exit_int();
     // set dev1 addr
-    mpu_dev(1);
+    mpu_set_dev(0);
+    if(inv_mpu_init()) {
+        return -1;
+    }
+    log_printf("dev0 mpu init OK\r\n");
+
+    // set dev1 addr
+    mpu_set_dev(1);
     if(inv_mpu_init()) {
         return -1;
     }
     log_printf("dev1 mpu init OK\r\n");
 
-    // set dev1 addr
-    mpu_dev(2);
-    if(inv_mpu_init()) {
-        return -1;
+    for(i = 0; i < 4; i++) {
+        Q0[i] = 1.0f;
+        Q1[i] = 0.0f;
+        Q2[i] = 0.0f;
+        Q3[i] = 0.0f;
     }
-    log_printf("dev2 mpu init OK\r\n");
+    
     return 0;
 }
 
@@ -188,23 +203,23 @@ int inv_mpu_init(void) {
 //     * Set hardware units to dps/g's/degrees scaling factor.
 //     */
     inv_set_gyro_orientation_and_scale(
-	    inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
-	    (long)gyro_fsr<<15);
+        inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
+        (long)gyro_fsr<<15);
     inv_set_accel_orientation_and_scale(
-	    inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
-	    (long)accel_fsr<<15);
+        inv_orientation_matrix_to_scalar(gyro_pdata.orientation),
+        (long)accel_fsr<<15);
 #ifdef COMPASS_ENABLED
     inv_set_compass_orientation_and_scale(
-	    inv_orientation_matrix_to_scalar(compass_pdata.orientation),
-	    (long)compass_fsr<<15);
+        inv_orientation_matrix_to_scalar(compass_pdata.orientation),
+        (long)compass_fsr<<15);
 #endif
 
     dmp_load_motion_driver_firmware();
     dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_pdata.orientation));
-//    
+//
     dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP |
-		       DMP_FEATURE_ANDROID_ORIENT | DMP_FEATURE_SEND_RAW_ACCEL |
-		       DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
+                       DMP_FEATURE_ANDROID_ORIENT | DMP_FEATURE_SEND_RAW_ACCEL |
+                       DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
     dmp_set_fifo_rate(DEFAULT_MPU_HZ);
     //    dmp_set_fifo_rate(20);
 
@@ -225,7 +240,7 @@ void run_self_test(void)
     result = mpu_run_self_test(gyro, accel);
 #endif
     if (result == 0x7) {
-	log_printf("Passed!\n");
+        log_printf("Passed!\n");
         log_printf("accel: %7.4f %7.4f %7.4f\n",
                     accel[0]/65536.f,
                     accel[1]/65536.f,
@@ -244,10 +259,10 @@ void run_self_test(void)
         unsigned char i = 0;
 
         for(i = 0; i<3; i++) {
-        	gyro[i] = (long)(gyro[i] * 32.8f); //convert to +-1000dps
-        	accel[i] *= 2048.f; //convert to +-16G
-        	accel[i] = accel[i] >> 16;
-        	gyro[i] = (long)(gyro[i] >> 16);
+            gyro[i] = (long)(gyro[i] * 32.8f); //convert to +-1000dps
+            accel[i] *= 2048.f; //convert to +-16G
+            accel[i] = accel[i] >> 16;
+            gyro[i] = (long)(gyro[i] >> 16);
         }
 
         mpu_set_gyro_bias_reg(gyro);
@@ -289,37 +304,36 @@ void run_self_test(void)
 
 }
 
-#define	 EULER_MARK	      0x01
-#define	 ACCEL_MARK	      0x02
-#define	 GYRO_MARK	      0x04
+#define	 EULER_MARK              0x01
+#define	 ACCEL_MARK              0x02
+#define	 GYRO_MARK               0x04
 
 static uint8_t config_ouput = 0xFF;
 void mpu_output_set(uint8_t * data) {
 
     if(*data == '1') {
-	config_ouput = EULER_MARK;
-	usb_printf("output euler\r\n");
-	log_printf("out put euler\r\n");
+        config_ouput = EULER_MARK;
+        usb_printf("output euler\r\n");
+        log_printf("out put euler\r\n");
     } else if(*data =='2') {
-	config_ouput = ACCEL_MARK;
-	usb_printf("output accel\r\n");
-	log_printf("out put accel\r\n");
+        config_ouput = ACCEL_MARK;
+        usb_printf("output accel\r\n");
+        log_printf("out put accel\r\n");
     } else if(*data == '3') {
-	config_ouput = GYRO_MARK;
-	usb_printf("output gyro\r\n");
-	log_printf("out put gyro\r\n");
+        config_ouput = GYRO_MARK;
+        usb_printf("output gyro\r\n");
+        log_printf("out put gyro\r\n");
     } else if(*data == '0') {
-	config_ouput = (EULER_MARK | ACCEL_MARK | GYRO_MARK);
-	usb_printf("output data\r\n");
-	log_printf("output data\r\n");
+        config_ouput = (EULER_MARK | ACCEL_MARK | GYRO_MARK);
+        usb_printf("output data\r\n");
+        log_printf("output data\r\n");
     }
 }
 
 
 #define q30  1073741824.0f
 
-static uint8_t int_flag = 0;
-void get_senser(void) {
+void get_senser(unsigned char dev) {
     short accel_data[3],gyro_data[3],sensors;
     float  accel[3];
     float  gyro[3];
@@ -330,51 +344,72 @@ void get_senser(void) {
     unsigned short accel_sens = 0;
     float gyro_sens = 0;
     float Pitch,Roll,Yaw;
-    static float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
+    float q0,q1,q2,q3;
 
-    if(int_flag) {
-        int_flag = 0;
+    q0 = Q0[dev];
+    q1 = Q1[dev];
+    q2 = Q2[dev];
+    q3 = Q3[dev];
 
-        dmp_read_fifo(gyro_data,accel_data,quat,&timestamp,&sensors,&more);
+    dmp_read_fifo(gyro_data,accel_data,quat,&timestamp,&sensors,&more);
 
-        usb_printf("t:%d",timestamp);
-        mpu_get_accel_sens(&accel_sens);
-        accel[0] = ((float)accel_data[0]/accel_sens);
-	accel[1] = ((float)accel_data[1]/accel_sens);
-	accel[2] = ((float)accel_data[2]/accel_sens);
+    usb_printf("t%d:%d\r\n",dev,timestamp);
+    mpu_get_accel_sens(&accel_sens);
+    accel[0] = ((float)accel_data[0]/accel_sens);
+    accel[1] = ((float)accel_data[1]/accel_sens);
+    accel[2] = ((float)accel_data[2]/accel_sens);
 
-        mpu_get_gyro_sens(&gyro_sens);
-        gyro[0] = gyro_data[0]/gyro_sens;
-        gyro[1] = gyro_data[1]/gyro_sens;
-        gyro[2] = gyro_data[2]/gyro_sens;
+    mpu_get_gyro_sens(&gyro_sens);
+    gyro[0] = gyro_data[0]/gyro_sens;
+    gyro[1] = gyro_data[1]/gyro_sens;
+    gyro[2] = gyro_data[2]/gyro_sens;
 
-	if(sensors & INV_WXYZ_QUAT) {
-            q0=quat[0] / q30;
-            q1=quat[1] / q30;
-            q2=quat[2] / q30;
-            q3=quat[3] / q30;
-            Pitch  = asin(2 * q1 * q3 - 2 * q0* q2)* 57.3; // pitch
-            Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
-            Yaw =  atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;
-            if(config_ouput & EULER_MARK) {
-                usb_printf("e %3.5f,%3.5f,%3.5f",Pitch,Roll,Yaw);
-            }
+    if(sensors & INV_WXYZ_QUAT) {
+        q0=quat[0] / q30;
+        q1=quat[1] / q30;
+        q2=quat[2] / q30;
+        q3=quat[3] / q30;
+        Pitch  = asin(2 * q1 * q3 - 2 * q0* q2)* 57.3; // pitch
+        Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
+        Yaw =  atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;
+        Q0[dev] = q0;
+        Q1[dev] = q1;
+        Q2[dev] = q2;
+        Q3[dev] = q3;
+
+        if(config_ouput & EULER_MARK) {
+            usb_printf("e%d %3.5f,%3.5f,%3.5f\r\n",dev,Pitch,Roll,Yaw);
         }
-// print  to usb
-        if(config_ouput & ACCEL_MARK) {
-            usb_printf("a %2.5f,%2.5f,%2.5f",accel[0],accel[1],accel[2]);
-        }
-        if(config_ouput & GYRO_MARK) {
-            usb_printf("g %3.5f,%3.5f,%3.5f",gyro[0],gyro[1],gyro[2]);
-        }
+    }
+    // print  to usb
+    if(config_ouput & ACCEL_MARK) {
+        usb_printf("a%d %2.5f,%2.5f,%2.5f\r\n",dev,accel[0],accel[1],accel[2]);
+    }
+    if(config_ouput & GYRO_MARK) {
+        usb_printf("g%d %3.5f,%3.5f,%3.5f\r\n",dev,gyro[0],gyro[1],gyro[2]);
     }
 
 }
 
+void collect_proc(void) {
+    unsigned char i;
+    for(i = 0; i < 4; i++) {
+	if(int_flg[i]) {
+	    int_flg[i] = 0;
+	    mpu_set_dev(i);
+	    get_senser(i);
+        }
+    }
+}
 
 void EXTI9_5_IRQHandler(void) {
     if(EXTI_GetITStatus(EXTI_Line5) != RESET) {
-        int_flag = 1;
+        int_flg[0] = 1;
         EXTI_ClearITPendingBit(EXTI_Line5);
+    }
+
+    if(EXTI_GetITStatus(EXTI_Line8) != RESET) {
+	int_flg[1] = 1;
+	EXTI_ClearITPendingBit(EXTI_Line8);
     }
 }

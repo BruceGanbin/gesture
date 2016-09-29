@@ -80,22 +80,22 @@ void usb_send_handle(void *parameter) {
 int main(void)
 {
     Set_System();
-//    Set_USBClock();
-//    USB_Interrupts_Config();
-//    USB_Init();
     sf_timer_init();
-
     serial_init();
     log_printf("hello world\r\n");
 
     mpu_dev_init();
+
+    Set_USBClock();
+    USB_Interrupts_Config();
+    USB_Init();
 
 //   usb_timer.func = usb_send_handle;
 //   usb_timer.timeout_tick = 1000;
 //   cre_sf_timer(&usb_timer,0);
     while (1)
     {
-        get_senser();
+        collect_proc();
         sf_timer_proc();
     }
 }

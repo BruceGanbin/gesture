@@ -764,7 +764,7 @@ int mpu_init(struct int_param_s *int_param)
     if(i2c_read(st.hw->addr, st.reg->who_am_i, 1, data))
         return -1;
     log_i("WHO AM I 0x%x",data[0]);
-    
+
     /* Reset device. */
     data[0] = BIT_RESET;
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
@@ -842,14 +842,14 @@ int mpu_init(struct int_param_s *int_param)
     return 0;
 }
 
-int mpu_dev(unsigned char dev){
+int mpu_set_dev(unsigned char dev){
     int ret = 0;
     switch(dev) {
-        case 1:
+        case 0:
             hw.addr = 0xD0;
             ret = 1;
             break;
-        case 2:
+        case 1:
             hw.addr = 0xD2;
             ret = 2;
             break;
