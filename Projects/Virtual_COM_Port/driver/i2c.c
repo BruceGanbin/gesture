@@ -28,10 +28,10 @@ void I2C_init(void)
     RCC_APB1PeriphClockCmd(I2C1_CLK,ENABLE);
     RCC_APB2PeriphClockCmd(I2C1_GPIO_CLK, ENABLE);
 
-    GPIO_InitStructure.GPIO_Pin=I2C1_SDA_PIN | I2C1_SCL_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(I2C1_GPIO_PORT,&GPIO_InitStructure);
+   GPIO_InitStructure.GPIO_Pin=I2C1_SDA_PIN | I2C1_SCL_PIN;
+   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
+   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   GPIO_Init(I2C1_GPIO_PORT,&GPIO_InitStructure);
 
     /* I2C init */
     I2C_StructInit(&I2C_InitStructure);
@@ -40,7 +40,7 @@ void I2C_init(void)
     I2C_InitStructure.I2C_OwnAddress1 = 0x00;
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed=200000;
+    I2C_InitStructure.I2C_ClockSpeed=100000;
     I2C_Init(I2C1,&I2C_InitStructure);
     I2C_Cmd(I2C1,ENABLE);
     I2C_DMACmd(I2C1, ENABLE);
@@ -108,6 +108,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
     while (I2C_GetFlagStatus(I2C1,I2C_FLAG_BUSY)) {
         if ((TimeOut --) == 0) {
             I2C_State = I2C_RTimeOut;
+            log_printf("w1\r\n");
             return  I2C_RTimeOut;
         }
     }
@@ -117,6 +118,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT)) {
         if ((TimeOut --) == 0) {
             I2C_State = I2C_WTimeOut;
+            log_printf("w2\r\n");
             return  I2C_WTimeOut;
         }
     }
@@ -132,6 +134,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
         if ((TimeOut --) == 0) {
             I2C_State = I2C_WTimeOut;
             I2C_GenerateSTOP(I2C1, ENABLE);
+            log_printf("w3\r\n");
             return  I2C_WTimeOut;
         }
     }
@@ -142,6 +145,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
         if ((TimeOut --) == 0) {
             I2C_State = I2C_WTimeOut;
             I2C_GenerateSTOP(I2C1, ENABLE);
+            log_printf("w4\r\n");
             return  I2C_WTimeOut;
         }
     }
@@ -155,6 +159,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
             if ((TimeOut --) == 0) {
                 I2C_State = I2C_RTimeOut;
                 I2C_GenerateSTOP(I2C1, ENABLE);
+                log_printf("w5\r\n");
                 return  I2C_WTimeOut;
             }
         }
@@ -162,6 +167,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
             if ((TimeOut --) == 0) {
                 I2C_State = I2C_RTimeOut;
                 I2C_GenerateSTOP(I2C1, ENABLE);
+                log_printf("w6\r\n");
                 return  I2C_WTimeOut;
             }
         }
@@ -180,6 +186,7 @@ unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWri
                 if ((TimeOut --) == 0) {
                     I2C_State = I2C_RTimeOut;
                     I2C_GenerateSTOP(I2C1, ENABLE);
+                    log_printf("w6\r\n");
                     return  I2C_WTimeOut;
                 }
             }
@@ -200,33 +207,30 @@ unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead
     while (I2C_GetFlagStatus(I2C1,I2C_FLAG_BUSY)) {
         if ((TimeOut --) == 0) {
             I2C_State = I2C_RTimeOut;
+            __enable_irq();
+            IIC_Reset_Bus();
+            log_printf("r1\r\n");
             return  I2C_RTimeOut;
         }
     }
-    I2C_AcknowledgeConfig(I2C1, ENABLE);
+    //    I2C_AcknowledgeConfig(I2C1, ENABLE);
     /*send Start condition,test on EV5 and clear it*/
     TimeOut = I2C_TimeOut;
     I2C_GenerateSTART(I2C1, ENABLE);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT)) {
         if ((TimeOut --) == 0) {
-            I2C_State = I2C_RTimeOut;
-            return  I2C_RTimeOut;
+            log_printf("r2\r\n");
+            goto out;
         }
-    }
-    /* Configure DMA Peripheral */
-    if (NumByteToRead > 1) {
-        I2C_Dma_Config(DMA_RX,pBuffer, NumByteToRead);
     }
 
     /*send Part Address for write,test on EV6 and clear it*/
     TimeOut = I2C_TimeOut;
     I2C_Send7bitAddress(I2C1, PartAddr, I2C_Direction_Transmitter);
-    //    I2C_Send7bitAddress(I2C1,PartAddr,I2C_Direction_Receiver);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) {
         if ((TimeOut --) == 0) {
-            I2C_State = I2C_RTimeOut;
-            I2C_GenerateSTOP(I2C1, ENABLE);
-            return  I2C_RTimeOut;
+            log_printf("r3\r\n");
+            goto out;
         }
     }
 
@@ -235,20 +239,18 @@ unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead
     I2C_SendData(I2C1, (uint8_t)WriteAddr);
     while(!I2C_CheckEvent(I2C1,I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
         if ((TimeOut --) == 0) {
-            I2C_State = I2C_RTimeOut;
-            I2C_GenerateSTOP(I2C1, ENABLE);
-            return  I2C_RTimeOut;
+            log_printf("r4\r\n");
+            goto out;
         }
     }
-
+    I2C_AcknowledgeConfig(I2C1, ENABLE);
     /*send Start condition,test on EV5 and clear it*/
     TimeOut = I2C_TimeOut;
     I2C_GenerateSTART(I2C1, ENABLE);
     while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT)) {
         if((TimeOut --) == 0) {
-            I2C_State = I2C_RTimeOut;
-            I2C_GenerateSTOP(I2C1, ENABLE);
-            return  I2C_RTimeOut;
+            log_printf("r5\r\n");
+            goto out;
         }
     }
 
@@ -256,23 +258,22 @@ unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead
     I2C_Send7bitAddress(I2C1, PartAddr, I2C_Direction_Receiver);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) {
         if ((TimeOut --) == 0) {
-            I2C_State=I2C_RTimeOut;
-            I2C_GenerateSTOP(I2C1,ENABLE);
-            return  I2C_RTimeOut;
+            log_printf("r6\r\n");
+            goto out;
         }
     }
 
     /* read data*/
     if(NumByteToRead > 2) {
+        I2C_Dma_Config(DMA_RX,pBuffer, NumByteToRead);
         I2C_DMACmd(I2C1, ENABLE);
         DMA_Cmd(I2C1_DMA_RX_CHANNEL, ENABLE);
 
         TimeOut = I2C_TimeOut * NumByteToRead;
         while (!DMA_GetFlagStatus(DMA1_FLAG_TC7)) {
             if ((TimeOut --) == 0) {
-                I2C_State = I2C_RTimeOut;
-                I2C_GenerateSTOP(I2C1,ENABLE);
-                return  I2C_RTimeOut;
+                log_printf("r7\r\n");
+                goto out;
             }
         }
         I2C_AcknowledgeConfig(I2C1, DISABLE);
@@ -296,15 +297,22 @@ unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead
                 TimeOut = I2C_TimeOut;
             } else {
                 if ((TimeOut --) == 0) {
-                    I2C_State = I2C_RTimeOut;
-                    I2C_GenerateSTOP(I2C1, ENABLE);
-                    return  I2C_RTimeOut;
+                    log_printf("r8\r\n");
+                    goto out;
                 }
             }
         }
     }
+
     __enable_irq();
     return  I2C_NOTimeout;
+
+out:
+    __enable_irq();
+    I2C_State = I2C_RTimeOut;
+    I2C_GenerateSTOP(I2C1, ENABLE);
+    IIC_Reset_Bus();
+    return  I2C_RTimeOut;
 }
 
 unsigned char CheckIIC_Ack(uint8_t PartAddr)
