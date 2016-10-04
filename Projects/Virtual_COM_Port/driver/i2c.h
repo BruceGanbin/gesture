@@ -34,7 +34,8 @@
 #define I2C2_DMA_TX_CHANNEL           DMA1_Channel4
 #define I2C2_DMA_RX_CHANNEL           DMA1_Channel5
 
-#define IIC_STOP()                    I2C_GenerateSTOP(I2C1,ENABLE)
+#define IIC_Reset_Bus()               I2C_init()
+
 
 #define Rd                            0
 #define Tx                            1
@@ -51,6 +52,6 @@ void I2C_init(void);
 unsigned char IIC_Read(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToRead,uint8_t *pBuffer);
 unsigned char IIC_Write(uint8_t PartAddr,uint8_t WriteAddr,uint16_t NumByteToWrite,uint8_t *pBuffer);
 unsigned char CheckIIC_Ack(uint8_t WriteAddr);
-void IIC_Reset_Bus(void);
+void Set_IIC_bus(char dev);
 
 #endif

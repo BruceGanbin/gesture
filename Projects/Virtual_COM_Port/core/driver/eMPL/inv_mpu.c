@@ -846,13 +846,24 @@ int mpu_set_dev(unsigned char dev){
     int ret = 0;
     switch(dev) {
         case 0:
+            Set_IIC_bus(1);
             hw.addr = 0xD0;
             ret = 1;
             break;
         case 1:
+            Set_IIC_bus(1);
             hw.addr = 0xD2;
             ret = 2;
             break;
+        case 2:
+            Set_IIC_bus(2);
+            hw.addr = 0xD0;
+            ret = 3;
+            break;
+        case 3:
+            Set_IIC_bus(2);
+            hw.addr = 0xD2;
+            ret = 4;
     }
     return ret;
 }

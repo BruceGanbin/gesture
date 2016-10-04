@@ -66,14 +66,16 @@ void set_exit_int(void) {
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+//    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+//    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+//    GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource5);
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource8);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource2);
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource12);
     /* Configure  line */
 
     EXTI_InitStructure.EXTI_Line = EXTI_Line5;
@@ -83,39 +85,63 @@ void set_exit_int(void) {
     EXTI_Init(&EXTI_InitStructure);
     EXTI_InitStructure.EXTI_Line = EXTI_Line8;
     EXTI_Init(&EXTI_InitStructure);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line2;
+    EXTI_Init(&EXTI_InitStructure);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line12;
+    EXTI_Init(&EXTI_InitStructure);
 
     NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 int mpu_dev_init(void) {
     unsigned char i;
+    unsigned char data;
     I2C_init();
     set_exit_int();
-    // set dev1 addr
-    mpu_set_dev(0);
-    if(inv_mpu_init()) {
-        return -1;
-    }
-    log_printf("dev0 mpu init OK\r\n");
-
-    // set dev1 addr
-    mpu_set_dev(1);
-    if(inv_mpu_init()) {
-        return -1;
-    }
-    log_printf("dev1 mpu init OK\r\n");
-
+    // init
     for(i = 0; i < 4; i++) {
         Q0[i] = 1.0f;
         Q1[i] = 0.0f;
         Q2[i] = 0.0f;
         Q3[i] = 0.0f;
     }
-    
+    // set dev1 addr
+    mpu_set_dev(0);
+    if(inv_mpu_init()) {
+        log_printf("dev0 init fail\r\n");
+        return -1;
+    }
+    log_printf("dev0 mpu init OK\r\n");
+
+    mpu_set_dev(1);
+    if(inv_mpu_init()) {
+        log_printf("dev1 init fail\r\n");
+        return -1;
+    }
+    log_printf("dev1 mpu init OK\r\n");
+
+    mpu_set_dev(2);
+    if(inv_mpu_init()) {
+        log_printf("dev2 init fail\r\n");
+        return -1;
+    }
+    log_printf("dev2 mpu init OK\r\n");
+
+    mpu_set_dev(3);
+    if(inv_mpu_init()) {
+        log_printf("dev3 init fail\r\n");
+        return -1;
+    }
+    log_printf("dev3 mpu init OK\r\n");
+
     return 0;
 }
 
@@ -276,21 +302,21 @@ void run_self_test(void)
         /* Push the calibrated data to the MPL library.
          *
          * MPL expects biases in hardware units << 16, but self test returns
-		 * biases in g's << 16.
-		 */
-    	unsigned short accel_sens;
-    	float gyro_sens;
+                * biases in g's << 16.
+                */
+        unsigned short accel_sens;
+        float gyro_sens;
 
-		mpu_get_accel_sens(&accel_sens);
-		accel[0] *= accel_sens;
-		accel[1] *= accel_sens;
-		accel[2] *= accel_sens;
-		inv_set_accel_bias(accel, 3);
-		mpu_get_gyro_sens(&gyro_sens);
-		gyro[0] = (long) (gyro[0] * gyro_sens);
-		gyro[1] = (long) (gyro[1] * gyro_sens);
-		gyro[2] = (long) (gyro[2] * gyro_sens);
-		inv_set_gyro_bias(gyro, 3);
+        mpu_get_accel_sens(&accel_sens);
+        accel[0] *= accel_sens;
+        accel[1] *= accel_sens;
+        accel[2] *= accel_sens;
+        inv_set_accel_bias(accel, 3);
+        mpu_get_gyro_sens(&gyro_sens);
+        gyro[0] = (long) (gyro[0] * gyro_sens);
+        gyro[1] = (long) (gyro[1] * gyro_sens);
+        gyro[2] = (long) (gyro[2] * gyro_sens);
+        inv_set_gyro_bias(gyro, 3);
 #endif
     }
     else {
@@ -304,9 +330,9 @@ void run_self_test(void)
 
 }
 
-#define	 EULER_MARK              0x01
-#define	 ACCEL_MARK              0x02
-#define	 GYRO_MARK               0x04
+#define          EULER_MARK              0x01
+#define          ACCEL_MARK              0x02
+#define          GYRO_MARK               0x04
 
 static uint8_t config_ouput = 0xFF;
 void mpu_output_set(uint8_t * data) {
@@ -369,7 +395,7 @@ void get_senser(unsigned char dev) {
         q1=quat[1] / q30;
         q2=quat[2] / q30;
         q3=quat[3] / q30;
-        Pitch  = asin(2 * q1 * q3 - 2 * q0* q2)* 57.3; // pitch
+        Pitch  = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3; // pitch
         Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
         Yaw =  atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;
         Q0[dev] = q0;
@@ -394,10 +420,10 @@ void get_senser(unsigned char dev) {
 void collect_proc(void) {
     unsigned char i;
     for(i = 0; i < 4; i++) {
-	if(int_flg[i]) {
-	    int_flg[i] = 0;
-	    mpu_set_dev(i);
-	    get_senser(i);
+        if(int_flg[i]) {
+            int_flg[i] = 0;
+            mpu_set_dev(i);
+            get_senser(i);
         }
     }
 }
@@ -409,7 +435,21 @@ void EXTI9_5_IRQHandler(void) {
     }
 
     if(EXTI_GetITStatus(EXTI_Line8) != RESET) {
-	int_flg[1] = 1;
-	EXTI_ClearITPendingBit(EXTI_Line8);
+        int_flg[1] = 1;
+        EXTI_ClearITPendingBit(EXTI_Line8);
+    }
+}
+
+void EXTI2_IRQHandler(void) {
+    if(EXTI_GetITStatus(EXTI_Line2) != RESET) {
+        int_flg[2] = 1;
+        EXTI_ClearITPendingBit(EXTI_Line2);
+    }
+}
+
+void EXTI15_10_IRQHandler(void) {
+    if(EXTI_GetITStatus(EXTI_Line12) != RESET) {
+        int_flg[3] = 1;
+        EXTI_ClearITPendingBit(EXTI_Line12);
     }
 }
