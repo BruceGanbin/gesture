@@ -10,12 +10,39 @@
 #include "stm32f10x.h"
 #include <math.h>
 
+#define USE_CAL_HW_REGISTERS
+
 void run_self_test(void);
 
 unsigned char int_flg[4];
 float  Q0[4],Q1[4],Q2[4],Q3[4];
 
+static unsigned char general_dev;
 unsigned char *mpl_key = (unsigned char*)"eMPL 5.1";
+
+typedef struct {
+    long gyro[3];
+    long accel[3];
+} offset_t;
+
+const offset_t self_set[4] = {
+    {
+        .accel = {1288, 845, 2521},
+        .gyro = {861, -85055, -22048}
+    },
+    {
+        .accel = {140, 110, 1707},
+        .gyro = {-228998, 12765, -40301}
+    },
+    {
+        .accel = {1313, 420, 3060},
+        .gyro = {199671, 49684, -15955}
+    },
+    {
+        .accel = {-754, 114, 437},
+        .gyro = {-66765, 47667, -5664}
+    }
+};
 
 struct platform_data_s {
     signed char orientation[9];
@@ -99,6 +126,41 @@ void set_exit_int(void) {
     NVIC_Init(&NVIC_InitStructure);
     NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
     NVIC_Init(&NVIC_InitStructure);
+}
+
+
+int mpu_set_dev(unsigned char dev) {
+    int ret = 0;
+    switch(dev) {
+        case 0:
+            Set_IIC_bus(1);
+            mpu_set_addr(0xD0);
+            ret = 1;
+            break;
+        case 1:
+            Set_IIC_bus(1);
+            mpu_set_addr(0xD2);
+            ret = 2;
+            break;
+        case 2:
+            Set_IIC_bus(2);
+            mpu_set_addr(0xD0);
+            ret = 3;
+            break;
+        case 3:
+            Set_IIC_bus(2);
+            mpu_set_addr(0xD2);
+            ret = 4;
+            break;
+        default:
+            return -1;
+    }
+    general_dev = dev;
+    return ret;
+}
+
+int mpu_get_dev(void) {
+    return general_dev;
 }
 
 int mpu_dev_init(void) {
@@ -247,31 +309,68 @@ int inv_mpu_init(void) {
                        DMP_FEATURE_ANDROID_ORIENT | DMP_FEATURE_SEND_RAW_ACCEL |
                        DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
     dmp_set_fifo_rate(DEFAULT_MPU_HZ);
-    //    dmp_set_fifo_rate(20);
 
-    //    run_self_test();
+    run_self_test();
+
     mpu_set_dmp_state(1);
 
     return 0;
+}
+
+void check_self_test(void)
+{
+    int result;
+    long gyro[3], accel[3];
+    result = mpu_run_6500_self_test(gyro, accel, 1);
+    if (result == 0x7) {
+        log_printf("Passed!\r\n");
+        log_printf("accel: %7.4f %7.4f %7.4f\r\n",
+                   accel[0]/65536.f,
+                   accel[1]/65536.f,
+                   accel[2]/65536.f);
+        log_printf("gyro: %7.4f %7.4f %7.4f\r\n",
+                   gyro[0]/65536.f,
+                   gyro[1]/65536.f,
+                   gyro[2]/65536.f);
+    }
 }
 
 void run_self_test(void)
 {
     int result;
     long gyro[3], accel[3];
+    int dev;
 
-#if defined (MPU6500) || defined (MPU9250)
-    result = mpu_run_6500_self_test(gyro, accel, 1);
-#elif defined (MPU6050) || defined (MPU9150)
-    result = mpu_run_self_test(gyro, accel);
-#endif
+
+//    check_self_test();
+//    check_self_test();
+//    check_self_test();
+//    check_self_test();
+//    check_self_test();
+//
+//#if defined (MPU6500) || defined (MPU9250)
+//    result = mpu_run_6500_self_test(gyro, accel, 1);
+//#elif defined (MPU6050) || defined (MPU9150)
+//    result = mpu_run_self_test(gyro, accel);
+//#endif
+
+    dev = mpu_get_dev();
+    log_printf("set dev%d\r\n",dev);
+    accel[0] = self_set[dev].accel[0];
+    accel[1] = self_set[dev].accel[1];
+    accel[2] = self_set[dev].accel[2];
+    gyro[0] = self_set[dev].gyro[0];
+    gyro[1] = self_set[dev].gyro[1];
+    gyro[2] = self_set[dev].gyro[2];
+    result = 0x07;
+
     if (result == 0x7) {
-        log_printf("Passed!\n");
-        log_printf("accel: %7.4f %7.4f %7.4f\n",
+        log_printf("Passed!\r\n");
+        log_printf("accel: %7.4f %7.4f %7.4f\r\n",
                     accel[0]/65536.f,
                     accel[1]/65536.f,
                     accel[2]/65536.f);
-        log_printf("gyro: %7.4f %7.4f %7.4f\n",
+        log_printf("gyro: %7.4f %7.4f %7.4f\r\n",
                     gyro[0]/65536.f,
                     gyro[1]/65536.f,
                     gyro[2]/65536.f);
@@ -321,11 +420,11 @@ void run_self_test(void)
     }
     else {
             if (!(result & 0x1))
-                log_printf("Gyro failed.\n");
+                log_printf("Gyro failed.\r\n");
             if (!(result & 0x2))
-                log_printf("Accel failed.\n");
+                log_printf("Accel failed.\r\n");
             if (!(result & 0x4))
-                log_printf("Compass failed.\n");
+                log_printf("Compass failed.\r\n");
      }
 
 }
